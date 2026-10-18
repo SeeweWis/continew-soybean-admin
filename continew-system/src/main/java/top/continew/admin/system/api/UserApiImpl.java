@@ -18,11 +18,14 @@ package top.continew.admin.system.api;
 
 import com.alicp.jetcache.anno.CacheType;
 import com.alicp.jetcache.anno.Cached;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import top.continew.admin.common.api.system.UserApi;
 import top.continew.admin.common.constant.CacheConstants;
+import top.continew.admin.common.context.UserContextHolder;
 import top.continew.admin.system.mapper.user.UserMapper;
+import top.continew.admin.system.model.entity.user.UserDO;
 import top.continew.admin.system.model.req.user.UserPasswordResetReq;
 import top.continew.admin.system.service.UserService;
 
@@ -51,5 +54,12 @@ public class UserApiImpl implements UserApi {
         UserPasswordResetReq req = new UserPasswordResetReq();
         req.setNewPassword(newPassword);
         baseService.resetPassword(req, id);
+    }
+
+    @Override
+    public boolean isAvailable(Long id) {
+        Long tenantId = UserContextHolder.getTenantId();
+        return id != null && tenantId != null && baseMapper.selectCount(new QueryWrapper<UserDO>()
+            .eq("id", id).eq("tenant_id", tenantId).eq("status", 1)) > 0;
     }
 }

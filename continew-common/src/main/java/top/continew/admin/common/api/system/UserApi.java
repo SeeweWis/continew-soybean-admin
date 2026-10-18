@@ -48,4 +48,12 @@ public interface UserApi {
      * @param id          ID
      */
     void resetPassword(String newPassword, Long id);
+
+    /**
+     * 检查当前租户内的用户是否可接收业务任务。
+     * @param id 用户 ID
+     * @return 当前租户中未删除且启用的用户
+     * @since 4.2.0
+     */
+    boolean isAvailable(Long id);
 }

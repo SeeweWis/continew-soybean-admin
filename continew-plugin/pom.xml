@@ -22,6 +22,7 @@
         <module>continew-plugin-generator</module>
         <module>continew-plugin-ocr</module>
         <module>continew-plugin-wechat-pay</module>
+        <module>continew-plugin-approval</module>
     </modules>
 
     <dependencies>

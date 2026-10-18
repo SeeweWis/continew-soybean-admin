@@ -108,6 +108,13 @@
                 <version>${revision}</version>
             </dependency>
 
+            <!-- 审批插件 -->
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>continew-plugin-approval</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
             <!-- 阿里云 OCR SDK -->
             <dependency>
                 <groupId>com.aliyun</groupId>
