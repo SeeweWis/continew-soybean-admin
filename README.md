@@ -1,7 +1,7 @@
 # ContiNew Admin 多租户中后台管理框架
 
 <a href="https://github.com/continew-org/continew-admin" title="Current Version" target="_blank">
-<img src="https://img.shields.io/badge/SNAPSHOT-v4.2.0-%23ff3f59.svg" alt="Current Version" />
+<img src="https://img.shields.io/badge/RELEASE-v4.2.0-%23ff3f59.svg" alt="Current Version" />
 </a>
 <a href="https://github.com/continew-org/continew-starter" title="ContiNew Starter" target="_blank">
 <img src="https://img.shields.io/badge/ContiNew Starter-2.17.0-%236CB52D.svg" alt="ContiNew Starter" />
@@ -40,7 +40,7 @@
 <img src="https://gitee.com/continew/continew-admin/badge/fork.svg?theme=dark" alt="Gitee Forks" />
 </a>
 
-📚 [在线文档](https://continew.top) | 🚀 [演示地址](https://continew.top/demo) | 💬 [提交 Issue](https://github.com/continew-org/continew-admin/issues)
+📚 [在线文档](https://continew.top/docs/admin) | 🚀 [演示地址](https://continew.top/demo) | 💬 [提交 Issue](https://github.com/continew-org/continew-admin/issues)
 
 ## 简介
 
@@ -145,8 +145,8 @@ public class DeptController extends BaseController<DeptService, DeptResp, DeptDe
 ##  系统功能
 
 > [!TIP]
-> 更多功能和优化正在赶来💦，最新项目计划、进展请查看 [开发计划](https://continew.top/docs/admin/reference/plan) 和 [更新日志](https://continew.top/docs/admin/reference/changelog)。
-> 功能不会用？请查看 [功能手册](https://continew.top/docs/admin/manual/tenant/management)。
+> 更多功能和优化正在赶来💦，最新项目计划、进展请查看 [开发计划](https://continew.top/docs/admin/reference/plan) 和 [更新日志](https://github.com/continew-org/continew-admin/blob/dev/CHANGELOG.md)。
+> 功能不会用？请查看 [功能手册](https://continew.top/docs/admin/manual/system)。
 
 - 仪表盘：提供工作台、分析页，工作台提供功能快捷导航入口、最新公告、动态；分析页提供全面数据可视化能力
 - 个人中心：支持基础信息修改、密码修改、邮箱绑定、手机号绑定（并提供行为验证码、短信限流等安全处理）、第三方账号绑定/解绑（微信登录）、头像裁剪上传
@@ -165,7 +165,7 @@ public class DeptController extends BaseController<DeptService, DeptResp, DeptDe
   - 邮件配置：提供系统发件箱配置，也支持通过配置文件指定
   - 短信配置：提供系统短信服务配置，也支持通过配置文件指定
   - 存储配置：管理文件存储配置，支持本地存储、兼容 S3 协议对象存储
-  - 客户端配置：多端（PC端、小程序端等）认证管理，可设置不同的 token 有效期
+  - 客户端配置：多端（PC端、小程序端等）认证管理，可设置不同的 token 有效期，支持可轮换的 Refresh Token 双令牌会话
 - 在线用户：管理当前登录用户，可一键踢除下线
 - 日志管理：管理系统登录日志、操作日志，支持查看日志详情，包含请求头、响应头等报文信息
 - 短信日志：管理系统短信发送日志，支持删除、导出 
@@ -525,7 +525,7 @@ ContiNew（Continue New）系列项目致力于通过持续迭代，为开发者
 
 ### 分支说明
 
-ContiNew 系列项目采用清晰的分支策略，确保开发与维护有序进行。提交 PR 前，请确认目标分支是否处于活跃维护状态，版本支持情况请查看 [更新日志#版本支持](https://continew.top/docs/admin/reference/changelog)。
+ContiNew 系列项目采用清晰的分支策略，确保开发与维护有序进行。提交 PR 前，请确认目标分支是否处于活跃维护状态，版本支持情况请查看 [升级指南](https://continew.top/docs/admin/guide/upgrade)。
 
 | 分支  | 说明                                                         |
 | ----- | ------------------------------------------------------------ |
