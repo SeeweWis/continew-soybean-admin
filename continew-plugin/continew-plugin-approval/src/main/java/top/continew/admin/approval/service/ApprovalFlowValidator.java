@@ -56,7 +56,7 @@ public class ApprovalFlowValidator {
     private final UserApi userApi;
 
     /**
-     * 校验可执行配置和当前租户有效审批人。
+     * 校验可执行配置和有效审批人。
      * @param json 流程配置
      * @return 已校验的配置
      */
@@ -82,7 +82,7 @@ public class ApprovalFlowValidator {
                 "审批人不能重复");
             for (Long id : node.getApprovers()) {
                 if (checkedUsers.add(id)) {
-                    CheckUtils.throwIf(!userApi.isAvailable(id), "审批人不存在、已禁用或不在当前租户");
+                    CheckUtils.throwIf(!userApi.isAvailable(id), "审批人不存在或已禁用");
                 }
             }
         }

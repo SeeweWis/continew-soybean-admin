@@ -17,7 +17,7 @@
     </parent>
 
     <groupId>top.continew.admin</groupId>
-    <artifactId>continew-soybean-admin</artifactId>
+    <artifactId>continew-single-admin</artifactId>
     <version>${revision}</version>
     <packaging>pom</packaging>
 
@@ -70,13 +70,6 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>continew-plugin-open</artifactId>
-                <version>${revision}</version>
-            </dependency>
-
-            <!-- 租户插件（后续会改造为独立插件） -->
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>continew-plugin-tenant</artifactId>
                 <version>${revision}</version>
             </dependency>
 

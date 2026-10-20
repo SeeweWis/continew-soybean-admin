@@ -44,15 +44,14 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import top.continew.admin.common.context.UserContext;
 import top.continew.admin.common.context.UserContextHolder;
 import top.continew.starter.auth.refresh.token.api.AccessSessionValidator;
-import top.continew.starter.extension.tenant.context.TenantContextHolder;
 
 /**
  * SaExtensionInterceptor 短路路径线程本地清理测试。
  *
  * <p>回归 C1：preHandle 返回 false 时 afterCompletion 不再回调，若不在短路前清除
  * UserContext 线程本地，池化线程会残留上一请求的上下文被下一请求复用。断言方式是
- * 短路后再次读取上下文：若已清除则重新走 {@link StpUtil#getSession()}（调用 2 次），
- * 未清除则命中线程本地（仅 1 次）。</p>
+ * 短路前预置上下文，短路后再次读取上下文：若已清除则重新走
+ * {@link StpUtil#getSession()}，否则命中线程本地。</p>
  *
  * @author luoqiz
  * @since 4.2.0
@@ -95,48 +94,16 @@ class SaExtensionInterceptorTest {
                 .thenReturn(factory);
             springUtil.when(() -> SpringUtil.getBean(ObjectMapper.class))
                 .thenReturn(new ObjectMapper());
-            try (MockedStatic<TenantContextHolder> tenantHolder = mockStatic(
-                TenantContextHolder.class)) {
-                tenantHolder.when(TenantContextHolder::isTenantEnabled).thenReturn(false);
-                MockHttpServletRequest request = this.request("/system/user");
-                MockHttpServletResponse response = new MockHttpServletResponse();
+            UserContextHolder.setContext(cachedContext, false);
+            MockHttpServletRequest request = this.request("/system/user");
+            MockHttpServletResponse response = new MockHttpServletResponse();
 
-                boolean flag = interceptor.preHandle(request, response, new Object());
+            boolean flag = interceptor.preHandle(request, response, new Object());
 
-                assertFalse(flag);
-                assertEquals(401, response.getStatus());
-                // preHandle 内已写入过一次上下文（getContext），短路后必须清除；若残留，
-                // 第二次读取会命中线程本地（getSession 仅 1 次），清除后为 2 次。
-                UserContextHolder.getContext();
-                stpUtil.verify(StpUtil::getSession, times(2));
-            }
-        }
-    }
-
-    @Test
-    void shouldClearThreadLocalBefore403ShortCircuit() throws Exception {
-        when(accessSessionValidator.getInvalidReason("access-token")).thenReturn(null);
-        try (MockedStatic<SpringUtil> springUtil = mockStatic(SpringUtil.class)) {
-            ResponseStatusFactory factory = this.statusFactory();
-            springUtil.when(() -> SpringUtil.getBean(ResponseStatusFactory.class))
-                .thenReturn(factory);
-            springUtil.when(() -> SpringUtil.getBean(ObjectMapper.class))
-                .thenReturn(new ObjectMapper());
-            try (MockedStatic<TenantContextHolder> tenantHolder = mockStatic(
-                TenantContextHolder.class)) {
-                tenantHolder.when(TenantContextHolder::isTenantEnabled).thenReturn(true);
-                tenantHolder.when(TenantContextHolder::getTenantId).thenReturn(2L);
-                stpUtil.when(() -> StpUtil.getExtra("access-token", "tenantId")).thenReturn(1L);
-                MockHttpServletRequest request = this.request("/system/user");
-                MockHttpServletResponse response = new MockHttpServletResponse();
-
-                boolean flag = interceptor.preHandle(request, response, new Object());
-
-                assertFalse(flag);
-                assertEquals(403, response.getStatus());
-                UserContextHolder.getContext();
-                stpUtil.verify(StpUtil::getSession, times(2));
-            }
+            assertFalse(flag);
+            assertEquals(401, response.getStatus());
+            UserContextHolder.getContext();
+            stpUtil.verify(StpUtil::getSession, times(1));
         }
     }
 
@@ -149,19 +116,16 @@ class SaExtensionInterceptorTest {
                 .thenReturn(factory);
             springUtil.when(() -> SpringUtil.getBean(ObjectMapper.class))
                 .thenReturn(new ObjectMapper());
-            try (MockedStatic<TenantContextHolder> tenantHolder = mockStatic(
-                TenantContextHolder.class)) {
-                tenantHolder.when(TenantContextHolder::isTenantEnabled).thenReturn(false);
-                MockHttpServletRequest request = this.request("/system/user");
-                MockHttpServletResponse response = new MockHttpServletResponse();
+            UserContextHolder.setContext(cachedContext, false);
+            MockHttpServletRequest request = this.request("/system/user");
+            MockHttpServletResponse response = new MockHttpServletResponse();
 
-                boolean flag = interceptor.preHandle(request, response, new Object());
-                interceptor.afterCompletion(request, response, new Object(), null);
+            boolean flag = interceptor.preHandle(request, response, new Object());
+            interceptor.afterCompletion(request, response, new Object(), null);
 
-                assertTrue(flag);
-                UserContextHolder.getContext();
-                stpUtil.verify(StpUtil::getSession, times(2));
-            }
+            assertTrue(flag);
+            UserContextHolder.getContext();
+            stpUtil.verify(StpUtil::getSession, times(1));
         }
     }
 

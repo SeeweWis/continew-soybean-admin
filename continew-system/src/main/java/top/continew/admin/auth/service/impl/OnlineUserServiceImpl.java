@@ -24,13 +24,11 @@ import org.springframework.stereotype.Service;
 import top.continew.admin.auth.model.query.OnlineUserQuery;
 import top.continew.admin.auth.model.resp.OnlineUserResp;
 import top.continew.admin.auth.service.OnlineUserService;
-import top.continew.admin.common.context.UserContextHolder;
 import top.continew.starter.auth.refresh.token.model.SessionView;
 import top.continew.starter.auth.refresh.token.service.SessionInvalidationService;
 import top.continew.starter.auth.refresh.token.service.SessionQueryService;
 import top.continew.starter.extension.crud.model.query.PageQuery;
 import top.continew.starter.extension.crud.model.resp.PageResp;
-import top.continew.starter.extension.tenant.context.TenantContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -60,12 +58,9 @@ public class OnlineUserServiceImpl implements OnlineUserService {
     @Override
     public List<OnlineUserResp> list(OnlineUserQuery query) {
         List<OnlineUserResp> list = new ArrayList<>();
-        Long tenantId = TenantContextHolder.isTenantEnabled() && !UserContextHolder.isSuperAdmin()
-            ? TenantContextHolder.getTenantId()
-            : null;
         // Refresh Session 才是可恢复登录态的事实源。Access Token 即使已经自然过期，
         // 只要长期会话仍有效，管理员就必须能够看到并撤销该设备登录。
-        for (SessionView session : sessionQueryService.listSessions(tenantId)) {
+        for (SessionView session : sessionQueryService.listSessions(null)) {
             LocalDateTime loginTime = DateUtil.date(session.getCreatedAt()).toLocalDateTime();
             if (!this.isMatch(query, session, loginTime)) {
                 continue;

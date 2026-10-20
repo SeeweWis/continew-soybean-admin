@@ -18,11 +18,9 @@ package top.continew.admin.auth.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 import top.continew.admin.auth.model.query.OnlineUserQuery;
 import top.continew.admin.auth.model.resp.OnlineUserResp;
 import top.continew.admin.auth.service.impl.OnlineUserServiceImpl;
@@ -30,7 +28,6 @@ import top.continew.starter.auth.refresh.token.model.RefreshSession;
 import top.continew.starter.auth.refresh.token.model.SessionView;
 import top.continew.starter.auth.refresh.token.service.SessionInvalidationService;
 import top.continew.starter.auth.refresh.token.service.SessionQueryService;
-import top.continew.starter.extension.tenant.context.TenantContextHolder;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -64,18 +61,13 @@ class OnlineUserServiceImplTest {
 
         OnlineUserServiceImpl service = new OnlineUserServiceImpl(sessionInvalidationService,
             sessionQueryService);
-        try (MockedStatic<TenantContextHolder> tenantHolder = mockStatic(
-            TenantContextHolder.class)) {
-            tenantHolder.when(TenantContextHolder::isTenantEnabled).thenReturn(false);
+        List<OnlineUserResp> result = service.list(new OnlineUserQuery());
 
-            List<OnlineUserResp> result = service.list(new OnlineUserQuery());
-
-            assertEquals(1, result.size());
-            assertEquals("session-1", result.get(0).getSessionId());
-            assertEquals(toLocalDateTime(session.getCreatedAt()), result.get(0).getLoginTime());
-            assertEquals(toLocalDateTime(session.getLastRefreshAt()),
-                result.get(0).getLastRefreshTime());
-        }
+        assertEquals(1, result.size());
+        assertEquals("session-1", result.get(0).getSessionId());
+        assertEquals(toLocalDateTime(session.getCreatedAt()), result.get(0).getLoginTime());
+        assertEquals(toLocalDateTime(session.getLastRefreshAt()),
+            result.get(0).getLastRefreshTime());
     }
 
     private LocalDateTime toLocalDateTime(long epochMilli) {

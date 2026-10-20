@@ -110,8 +110,4 @@ public class ApprovalInstanceDO extends BaseIdDO {
      */
     private LocalDateTime endTime;
 
-    /**
-     * 租户ID
-     */
-    private Long tenantId;
 }

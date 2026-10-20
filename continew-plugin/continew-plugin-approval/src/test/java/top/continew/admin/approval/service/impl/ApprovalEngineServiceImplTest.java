@@ -99,11 +99,9 @@ class ApprovalEngineServiceImplTest {
                 taskMapper, historyMapper, mock(ApprovalFlowValidator.class), userApi);
         UserContext context = new UserContext();
         context.setId(7L);
-        context.setTenantId(0L);
         UserContextHolder.setContext(context);
         instance = new ApprovalInstanceDO();
         instance.setId(1L);
-        instance.setTenantId(0L);
         instance.setStartUser(7L);
         instance.setCurrentNodeId("review");
         instance.setStatus(ApprovalStatusEnum.PENDING);
@@ -111,7 +109,6 @@ class ApprovalEngineServiceImplTest {
             "{\"nodes\":[{\"id\":\"review\",\"name\":\"Review\",\"approveMode\":\"AND\"}]}");
         task = new ApprovalTaskDO();
         task.setId(2L);
-        task.setTenantId(0L);
         task.setInstanceId(1L);
         task.setNodeId("review");
         task.setAssignee(7L);
@@ -148,8 +145,8 @@ class ApprovalEngineServiceImplTest {
     }
 
     @Test
-    void shouldRejectCrossTenantTask() {
-        task.setTenantId(9L);
+    void shouldRejectTaskAssignedToAnotherUser() {
+        task.setAssignee(9L);
         assertThrows(BusinessException.class, () -> service.approve(2L, new ApprovalOpinionReq()));
         verifyNoInteractions(historyMapper);
     }

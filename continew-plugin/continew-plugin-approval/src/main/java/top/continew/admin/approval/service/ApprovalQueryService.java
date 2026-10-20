@@ -46,7 +46,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * 审批查询，租户隔离之外始终按发起人或任务参与人授权。
+ * 审批查询，始终按发起人或任务参与人授权。
  *
  * @author seewis
  * @since 4.2.0
@@ -72,7 +72,6 @@ public class ApprovalQueryService {
         Page<ApprovalInstanceDO> page = instanceMapper.selectPage(new Page<>(pageQuery.getPage(),
             pageQuery.getSize()),
             new LambdaQueryWrapper<ApprovalInstanceDO>()
-                .eq(ApprovalInstanceDO::getTenantId, UserContextHolder.getTenantId())
                 .eq(ApprovalInstanceDO::getStartUser, UserContextHolder.getUserId())
                 .like(StrUtil.isNotBlank(query.getTitle()), ApprovalInstanceDO::getTitle,
                     query.getTitle())
@@ -110,7 +109,7 @@ public class ApprovalQueryService {
         boolean completed) {
         requireUser();
         return PageResp.build(taskMapper.selectMyPage(new Page<>(pageQuery.getPage(),
-            pageQuery.getSize()), UserContextHolder.getUserId(), UserContextHolder.getTenantId(),
+            pageQuery.getSize()), UserContextHolder.getUserId(),
             query, completed));
     }
 
@@ -124,23 +123,18 @@ public class ApprovalQueryService {
         requireUser();
         ApprovalInstanceDO instance = instanceMapper.selectById(id);
         CheckUtils.throwIfNull(instance, "审批实例不存在");
-        CheckUtils.throwIfNotEqual(instance.getTenantId(), UserContextHolder.getTenantId(),
-            "审批实例不存在");
         if (!Objects.equals(instance.getStartUser(), UserContextHolder.getUserId())) {
             Long count = taskMapper.selectCount(new LambdaQueryWrapper<ApprovalTaskDO>()
                 .eq(ApprovalTaskDO::getInstanceId, id)
-                .eq(ApprovalTaskDO::getTenantId, UserContextHolder.getTenantId())
                 .eq(ApprovalTaskDO::getAssignee, UserContextHolder.getUserId()));
             CheckUtils.throwIf(count == 0, "无权查看此审批");
         }
         ApprovalDetailResp result = new ApprovalDetailResp();
         result.setInstance(instance);
         result.setTasks(taskMapper.selectList(new LambdaQueryWrapper<ApprovalTaskDO>()
-            .eq(ApprovalTaskDO::getTenantId, UserContextHolder.getTenantId())
             .eq(ApprovalTaskDO::getInstanceId, id)
             .orderByAsc(ApprovalTaskDO::getCreateTime).orderByAsc(ApprovalTaskDO::getId)));
         result.setHistory(historyMapper.selectList(new LambdaQueryWrapper<ApprovalHistoryDO>()
-            .eq(ApprovalHistoryDO::getTenantId, UserContextHolder.getTenantId())
             .eq(ApprovalHistoryDO::getInstanceId, id)
             .orderByAsc(ApprovalHistoryDO::getCreateTime).orderByAsc(ApprovalHistoryDO::getId)));
         Map<Long, String> names = new HashMap<>();
@@ -164,6 +158,5 @@ public class ApprovalQueryService {
 
     private void requireUser() {
         CheckUtils.throwIfNull(UserContextHolder.getUserId(), "请先登录");
-        CheckUtils.throwIfNull(UserContextHolder.getTenantId(), "租户上下文无效");
     }
 }

@@ -27,7 +27,7 @@ import top.continew.starter.auth.refresh.token.model.RefreshSessionPrincipal;
  * 随 Refresh Session 一并保存，用于会话管理展示与失效原因判定。</p>
  *
  * @param userContext  用户上下文
- * @param extraContext 用户额外上下文（含租户 ID、IP 等请求信息）
+ * @param extraContext 用户额外上下文（IP 等请求信息）
  * @author Charles7c
  * @since 4.2.0
  */
@@ -40,6 +40,12 @@ public record RefreshSessionPrincipalAdapter(UserContext userContext,
     }
 
     @Override
+    public Long getTenantId() {
+        // Required by the external refresh-token principal contract; this application has no tenant.
+        return null;
+    }
+
+    @Override
     public String getUsername() {
         return this.userContext.getUsername();
     }
@@ -47,11 +53,6 @@ public record RefreshSessionPrincipalAdapter(UserContext userContext,
     @Override
     public String getNickname() {
         return this.userContext.getNickname();
-    }
-
-    @Override
-    public Long getTenantId() {
-        return this.extraContext.getTenantId();
     }
 
     @Override

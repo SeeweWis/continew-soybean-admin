@@ -92,11 +92,6 @@ public class ApprovalHistoryDO extends BaseIdDO {
     private Long toUser;
 
     /**
-     * 租户ID
-     */
-    private Long tenantId;
-
-    /**
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)

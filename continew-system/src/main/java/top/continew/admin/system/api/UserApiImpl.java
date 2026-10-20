@@ -23,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import top.continew.admin.common.api.system.UserApi;
 import top.continew.admin.common.constant.CacheConstants;
-import top.continew.admin.common.context.UserContextHolder;
 import top.continew.admin.system.mapper.user.UserMapper;
 import top.continew.admin.system.model.entity.user.UserDO;
 import top.continew.admin.system.model.req.user.UserPasswordResetReq;
@@ -58,8 +57,7 @@ public class UserApiImpl implements UserApi {
 
     @Override
     public boolean isAvailable(Long id) {
-        Long tenantId = UserContextHolder.getTenantId();
-        return id != null && tenantId != null && baseMapper.selectCount(new QueryWrapper<UserDO>()
-            .eq("id", id).eq("tenant_id", tenantId).eq("status", 1)) > 0;
+        return id != null && baseMapper.selectCount(new QueryWrapper<UserDO>()
+            .eq("id", id).eq("status", 1)) > 0;
     }
 }

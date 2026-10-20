@@ -50,9 +50,9 @@ public interface UserApi {
     void resetPassword(String newPassword, Long id);
 
     /**
-     * 检查当前租户内的用户是否可接收业务任务。
+     * 检查用户是否可接收业务任务。
      * @param id 用户 ID
-     * @return 当前租户中未删除且启用的用户
+     * @return 未删除且启用的用户
      * @since 4.2.0
      */
     boolean isAvailable(Long id);

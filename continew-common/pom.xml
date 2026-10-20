@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>top.continew.admin</groupId>
-        <artifactId>continew-soybean-admin</artifactId>
+        <artifactId>continew-single-admin</artifactId>
         <version>${revision}</version>
     </parent>
 
@@ -197,10 +197,5 @@
             <artifactId>continew-starter-extension-crud-mp</artifactId>
         </dependency>
 
-        <!-- ContiNew Starter 扩展模块 - 租户 -->
-        <dependency>
-            <groupId>top.continew.starter</groupId>
-            <artifactId>continew-starter-extension-tenant-mp</artifactId>
-        </dependency>
     </dependencies>
 </project>

@@ -76,7 +76,6 @@ public class ApprovalEngineServiceImpl implements ApprovalEngineService {
         // 1. 查询审批定义
         ApprovalDefinitionDO definition = definitionMapper.selectOne(
             new LambdaQueryWrapper<ApprovalDefinitionDO>()
-                .eq(ApprovalDefinitionDO::getTenantId, UserContextHolder.getTenantId())
                 .eq(ApprovalDefinitionDO::getCode, req.getDefinitionCode())
                 .eq(ApprovalDefinitionDO::getStatus, ApprovalDefinitionDO.StatusEnum.ENABLED));
         CheckUtils.throwIfNull(definition, "审批定义不存在或已禁用");
@@ -97,7 +96,6 @@ public class ApprovalEngineServiceImpl implements ApprovalEngineService {
         instance.setFormData(req.getFormData());
         instance.setFormConfig(formConfigJson);
         instance.setFlowConfig(definition.getFlowConfig());
-        instance.setTenantId(UserContextHolder.getTenantId());
         instance.setStatus(ApprovalStatusEnum.PENDING);
         instance.setStartUser(UserContextHolder.getUserId());
         instance.setStartTime(LocalDateTime.now(GlobalConstants.DEFAULT_ZONE_ID));
@@ -215,8 +213,7 @@ public class ApprovalEngineServiceImpl implements ApprovalEngineService {
         CheckUtils.throwIfNotEqual(task.getStatus(), ApprovalStatusEnum.PENDING, "任务状态不正确");
 
         checkCurrentTask(task, lockedInstance);
-        CheckUtils.throwIf(!userApi.isAvailable(req.getToUserId()), "目标用户不存在、已禁用或不在当前租户");
-        CheckUtils.throwIfNotEqual(task.getTenantId(), UserContextHolder.getTenantId(), "任务不存在");
+        CheckUtils.throwIf(!userApi.isAvailable(req.getToUserId()), "目标用户不存在或已禁用");
         CheckUtils.throwIf(Objects.equals(task.getAssignee(), req.getToUserId()), "不能转办给自己");
         // 2. 更新任务状态
         Long fromUserId = task.getAssignee();
@@ -227,7 +224,6 @@ public class ApprovalEngineServiceImpl implements ApprovalEngineService {
         // 3. 创建新任务
         ApprovalTaskDO newTask = new ApprovalTaskDO();
         newTask.setInstanceId(task.getInstanceId());
-        newTask.setTenantId(UserContextHolder.getTenantId());
         newTask.setNodeId(task.getNodeId());
         newTask.setNodeName(task.getNodeName());
         newTask.setAssignee(req.getToUserId());
@@ -283,9 +279,8 @@ public class ApprovalEngineServiceImpl implements ApprovalEngineService {
 
         for (Long approverId : node.getApprovers()) {
             ApprovalTaskDO task = new ApprovalTaskDO();
-            CheckUtils.throwIf(!userApi.isAvailable(approverId), "审批人不存在、已禁用或不在当前租户");
+            CheckUtils.throwIf(!userApi.isAvailable(approverId), "审批人不存在或已禁用");
             task.setInstanceId(instance.getId());
-            task.setTenantId(UserContextHolder.getTenantId());
             task.setNodeId(node.getId());
             task.setNodeName(node.getName());
             task.setAssignee(approverId);
@@ -425,7 +420,6 @@ public class ApprovalEngineServiceImpl implements ApprovalEngineService {
         String attachments, Long fromUser, Long toUser) {
         ApprovalHistoryDO history = new ApprovalHistoryDO();
         history.setInstanceId(instanceId);
-        history.setTenantId(UserContextHolder.getTenantId());
         history.setTaskId(taskId);
         history.setNodeId(nodeId);
         history.setNodeName(nodeName);
@@ -441,14 +435,12 @@ public class ApprovalEngineServiceImpl implements ApprovalEngineService {
 
     private void requireContext() {
         CheckUtils.throwIfNull(UserContextHolder.getUserId(), "请先登录");
-        CheckUtils.throwIfNull(UserContextHolder.getTenantId(), "租户上下文无效");
     }
 
     private ApprovalInstanceDO lockInstance(Long id) {
         ApprovalInstanceDO instance =
             instanceMapper.selectOne(new LambdaQueryWrapper<ApprovalInstanceDO>()
                 .eq(ApprovalInstanceDO::getId, id)
-                .eq(ApprovalInstanceDO::getTenantId, UserContextHolder.getTenantId())
                 .last("FOR UPDATE"));
         CheckUtils.throwIfNull(instance, "审批实例不存在");
         CheckUtils.throwIfNotEqual(instance.getStatus(), ApprovalStatusEnum.PENDING, "审批已结束，请刷新列表");
@@ -463,7 +455,6 @@ public class ApprovalEngineServiceImpl implements ApprovalEngineService {
             config.getNodes().stream()
                 .noneMatch(n -> Objects.equals(n.getId(), instance.getCurrentNodeId())),
             "流程快照与当前节点不一致，请联系管理员处理");
-        CheckUtils.throwIfNotEqual(task.getTenantId(), UserContextHolder.getTenantId(), "任务不存在");
         CheckUtils.throwIfNotEqual(task.getNodeId(), instance.getCurrentNodeId(), "任务节点已变更，请刷新列表");
     }
 }

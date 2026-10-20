@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>top.continew.admin</groupId>
-        <artifactId>continew-soybean-admin</artifactId>
+        <artifactId>continew-single-admin</artifactId>
         <version>${revision}</version>
     </parent>
 
@@ -29,11 +29,6 @@
             <artifactId>continew-plugin-open</artifactId>
         </dependency>
 
-        <!-- 租户插件 -->
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>continew-plugin-tenant</artifactId>
-        </dependency>
 
         <!-- 任务调度插件 -->
         <dependency>

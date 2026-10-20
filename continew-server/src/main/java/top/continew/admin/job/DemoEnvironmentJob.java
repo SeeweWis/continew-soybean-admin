@@ -58,12 +58,8 @@ import top.continew.admin.system.model.entity.RoleMenuDO;
 import top.continew.admin.system.model.entity.StorageDO;
 import top.continew.admin.system.model.entity.UserRoleDO;
 import top.continew.admin.system.model.entity.user.UserDO;
-import top.continew.admin.tenant.mapper.PackageMapper;
-import top.continew.admin.tenant.mapper.PackageMenuMapper;
-import top.continew.admin.tenant.mapper.TenantMapper;
 import top.continew.starter.cache.redisson.util.RedisUtils;
 import top.continew.starter.core.constant.StringConstants;
-import top.continew.starter.extension.tenant.annotation.TenantIgnore;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -95,9 +91,6 @@ public class DemoEnvironmentJob {
     private final DeptMapper deptMapper;
     private final AppMapper appMapper;
     private final ClientMapper clientsMapper;
-    private final TenantMapper tenantMapper;
-    private final PackageMapper packageMapper;
-    private final PackageMenuMapper packageMenuMapper;
 
     private static final Long DELETE_FLAG = 10000L;
     private static final Long MESSAGE_FLAG = 0L;
@@ -114,7 +107,6 @@ public class DemoEnvironmentJob {
     /**
      * 重置演示环境数据
      */
-    @TenantIgnore
     @JobExecutor(name = "ResetEnvironmentData")
     @Transactional(rollbackFor = Exception.class)
     public void resetEnvironmentData() {
@@ -146,10 +138,6 @@ public class DemoEnvironmentJob {
             this.log(appCount, "应用");
             Long clientCount = clientsMapper.lambdaQuery().gt(ClientDO::getId, DELETE_FLAG).count();
             this.log(clientCount, "客户端");
-            Long tenantCount = tenantMapper.lambdaQuery().count();
-            this.log(tenantCount, "租户");
-            Long packageCount = packageMapper.lambdaQuery().count();
-            this.log(packageCount, "套餐");
             InterceptorIgnoreHelper.handle(IgnoreStrategy.builder().blockAttack(true).build());
             SnailJobLog.REMOTE.info("演示环境待清理数据项检测完成，开始执行清理。");
             // 清理关联数据
@@ -159,7 +147,6 @@ public class DemoEnvironmentJob {
             roleMenuMapper.lambdaUpdate().notIn(RoleMenuDO::getRoleId, ROLE_FLAG).remove();
             userRoleMapper.lambdaUpdate().gt(UserRoleDO::getId, USER_ROLE_FLAG).remove();
             userSocialMapper.lambdaUpdate().remove();
-            packageMenuMapper.lambdaUpdate().remove();
             SnailJobLog.REMOTE.info("关联表数据项清理完成。");
             // 清理具体数据
             this.clean(dictItemCount, "字典项", null, () -> dictItemMapper.lambdaUpdate()
@@ -193,8 +180,6 @@ public class DemoEnvironmentJob {
             this.clean(clientCount, "客户端", null, () -> clientsMapper.lambdaUpdate()
                 .gt(ClientDO::getId, DEPT_FLAG)
                 .remove());
-            this.clean(tenantCount, "租户", null, () -> tenantMapper.lambdaUpdate().remove());
-            this.clean(packageCount, "套餐", null, () -> packageMapper.lambdaUpdate().remove());
             SnailJobLog.REMOTE.info("演示环境数据已清理完成。");
             SnailJobLog.REMOTE.info("定时任务 [重置演示环境数据] 执行结束。");
         } finally {

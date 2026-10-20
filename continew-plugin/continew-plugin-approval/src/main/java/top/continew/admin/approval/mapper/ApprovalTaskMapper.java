@@ -35,15 +35,14 @@ import top.continew.starter.data.mapper.BaseMapper;
 public interface ApprovalTaskMapper extends BaseMapper<ApprovalTaskDO> {
 
     /**
-     * 查询当前租户分配给指定用户的任务。
+     * 查询分配给指定用户的任务。
      * @param page 分页
      * @param userId 当前用户
-     * @param tenantId 当前租户
      * @param query 条件
      * @param completed 是否已处理
      * @return 任务页
      */
     IPage<ApprovalTaskResp> selectMyPage(@Param("page") Page<ApprovalTaskResp> page,
-        @Param("userId") Long userId, @Param("tenantId") Long tenantId,
+        @Param("userId") Long userId,
         @Param("query") ApprovalTaskQuery query, @Param("completed") boolean completed);
 }

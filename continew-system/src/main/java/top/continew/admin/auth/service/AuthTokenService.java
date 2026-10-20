@@ -39,12 +39,11 @@ public interface AuthTokenService {
      *
      * @param user     用户信息
      * @param client   客户端配置
-     * @param tenantId 当前登录确定的租户 ID
      * @param request  HTTP 请求
      * @param response HTTP 响应，用于写入浏览器 Refresh Token Cookie
      * @return 登录令牌响应
      */
-    LoginResp issue(UserDO user, ClientResp client, Long tenantId,
+    LoginResp issue(UserDO user, ClientResp client,
         HttpServletRequest request, HttpServletResponse response);
 
     /**
@@ -55,13 +54,12 @@ public interface AuthTokenService {
      *
      * @param user     用户信息
      * @param client   客户端配置
-     * @param tenantId 当前登录确定的租户 ID
      * @param refreshSession 刷新时所属的登录 Session
      * @param request  HTTP 请求
      * @param response HTTP 响应
      * @return 登录令牌响应（不包含新的 Refresh Token）
      */
-    LoginResp issueAccessToken(UserDO user, ClientResp client, Long tenantId,
+    LoginResp issueAccessToken(UserDO user, ClientResp client,
         RefreshSession refreshSession, HttpServletRequest request, HttpServletResponse response);
 
 }

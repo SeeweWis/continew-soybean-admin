@@ -5,8 +5,8 @@
         SELECT t.id, t.instance_id, t.node_name, t.assignee, t.status, t.create_time,
                t.complete_time, i.title, i.start_user
         FROM approval_task t
-        INNER JOIN approval_instance i ON i.id = t.instance_id AND i.tenant_id = t.tenant_id
-        WHERE t.assignee = #{userId} AND t.tenant_id = #{tenantId} AND i.tenant_id = #{tenantId}
+        INNER JOIN approval_instance i ON i.id = t.instance_id
+        WHERE t.assignee = #{userId}
         <choose>
             <when test="completed">AND t.status IN ('APPROVED', 'REJECTED', 'TRANSFERRED')</when>
             <otherwise>AND t.status = 'PENDING' AND i.status = 'PENDING' AND i.current_node_id = t.node_id</otherwise>

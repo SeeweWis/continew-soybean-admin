@@ -42,7 +42,7 @@ public class MenuApiImpl implements MenuApi {
     public List<Tree<Long>> listTree(List<Long> excludeMenuIds, boolean isSimple) {
         MenuQuery query = new MenuQuery();
         query.setStatus(DisEnableStatusEnum.ENABLE);
-        // 过滤掉租户不能使用的菜单
+        // 过滤不需要展示的菜单
         query.setExcludeMenuIdList(excludeMenuIds);
         return baseService.tree(query, null, isSimple);
     }

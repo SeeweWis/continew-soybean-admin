@@ -107,7 +107,7 @@ class MiniProgramLoginHandlerTest {
             return true;
         });
         LoginResp expected = LoginResp.builder().accessToken("access-token").build();
-        when(authTokenService.issue(any(UserDO.class), any(ClientResp.class), any(),
+        when(authTokenService.issue(any(UserDO.class), any(ClientResp.class),
             any(HttpServletRequest.class), any(HttpServletResponse.class))).thenReturn(expected);
         MiniProgramLoginReq req = new MiniProgramLoginReq();
         req.setCode("one-time-code");

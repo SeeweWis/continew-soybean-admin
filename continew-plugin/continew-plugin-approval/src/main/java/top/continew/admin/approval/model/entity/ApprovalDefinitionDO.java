@@ -76,11 +76,6 @@ public class ApprovalDefinitionDO extends BaseDO {
     private StatusEnum status;
 
     /**
-     * 租户ID
-     */
-    private Long tenantId;
-
-    /**
      * 状态枚举
      */
     @lombok.Getter
