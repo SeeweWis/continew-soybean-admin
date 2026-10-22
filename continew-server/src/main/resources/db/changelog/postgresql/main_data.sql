@@ -271,6 +271,51 @@ WHERE NOT EXISTS (
     SELECT 1 FROM "sys_option" WHERE "code" = 'MINI_PROGRAM_APP_SECRET'
 );
 
+-- changeset seewe-yolo:external-user-departments dbms:postgresql
+-- comment 外部用户部门拆分、默认归属与防误删配置
+UPDATE "sys_dept" SET "is_system" = true,
+    "description" = '外部用户（小程序/公众号/服务号）归属部门'
+WHERE "name" = '外部部门' AND "parent_id" = 1 AND "deleted" = 0;
+
+INSERT INTO "sys_dept"
+("id", "name", "parent_id", "ancestors", "description", "sort", "status", "is_system", "create_user", "create_time")
+SELECT 547888897925840946, '小程序', 547888897925840929, '0,1,547888897925840929', '小程序注册用户归属部门', 1, 1, true, 1, NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM "sys_dept" WHERE "name" = '小程序' AND "parent_id" = 547888897925840929 AND "deleted" = 0
+);
+
+INSERT INTO "sys_dept"
+("id", "name", "parent_id", "ancestors", "description", "sort", "status", "is_system", "create_user", "create_time")
+SELECT 547888897925840947, '公众号', 547888897925840929, '0,1,547888897925840929', '公众号注册用户归属部门', 2, 1, true, 1, NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM "sys_dept" WHERE "name" = '公众号' AND "parent_id" = 547888897925840929 AND "deleted" = 0
+);
+
+INSERT INTO "sys_dept"
+("id", "name", "parent_id", "ancestors", "description", "sort", "status", "is_system", "create_user", "create_time")
+SELECT 547888897925840948, '服务号', 547888897925840929, '0,1,547888897925840929', '服务号注册用户归属部门', 3, 1, true, 1, NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM "sys_dept" WHERE "name" = '服务号' AND "parent_id" = 547888897925840929 AND "deleted" = 0
+);
+
+INSERT INTO "sys_option" ("id", "category", "name", "code", "value", "default_value", "description")
+SELECT 547888897925840949, 'LOGIN', '小程序默认归属部门', 'MINI_PROGRAM_DEFAULT_DEPT_ID',
+    CAST((SELECT "id" FROM "sys_dept" WHERE "name" = '小程序' AND "parent_id" = 547888897925840929 AND "deleted" = 0 LIMIT 1) AS varchar),
+    NULL, '小程序自动注册用户的默认归属部门（sys_dept.id）'
+WHERE NOT EXISTS (
+    SELECT 1 FROM "sys_option" WHERE "code" = 'MINI_PROGRAM_DEFAULT_DEPT_ID'
+);
+
+-- changeset seewe-yolo:mini-program-client dbms:postgresql
+-- comment 初始化微信小程序客户端（与 continew-single-uni 的 VITE_APP_CLIENT_ID 对应）
+-- 微信手机号登录与账号登录共用同一 clientId；Refresh Token 必须走 BODY 才返回 refreshToken
+INSERT INTO "sys_client"
+("id", "client_id", "client_type", "auth_type", "active_timeout", "timeout", "refresh_token_timeout", "refresh_token_mode", "status", "create_user", "create_time")
+SELECT 547888897925840940, 'f4b7e0a29d6c4815b3e7f1d2a9c60e83', 'XCX', '["ACCOUNT", "MINI_PROGRAM"]', 1800, 86400, 2592000, 'BODY', 1, 1, NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM "sys_client" WHERE "client_id" = 'f4b7e0a29d6c4815b3e7f1d2a9c60e83' AND "deleted" = 0
+);
+
 -- changeset seewe-yolo:aliyun-ocr-option-menu dbms:postgresql
 -- comment 阿里云 OCR 配置及三方能力配置菜单
 INSERT INTO "sys_option" ("id", "category", "name", "code", "value", "default_value", "description")

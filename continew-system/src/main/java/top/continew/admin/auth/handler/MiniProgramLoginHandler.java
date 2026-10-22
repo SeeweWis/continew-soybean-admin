@@ -17,9 +17,9 @@
 package top.continew.admin.auth.handler;
 
 import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,7 +55,7 @@ public class MiniProgramLoginHandler extends AbstractLoginHandler<MiniProgramLog
 
     private static final String APP_ID_OPTION = "MINI_PROGRAM_APP_ID";
     private static final String APP_SECRET_OPTION = "MINI_PROGRAM_APP_SECRET";
-    private static final String EXTERNAL_DEPT_NAME = "外部部门";
+    private static final String DEFAULT_DEPT_ID_OPTION = "MINI_PROGRAM_DEFAULT_DEPT_ID";
 
     private final MiniProgramApiClient miniProgramApiClient;
     private final DeptService deptService;
@@ -72,7 +72,7 @@ public class MiniProgramLoginHandler extends AbstractLoginHandler<MiniProgramLog
         String phone = miniProgramApiClient.getPhoneNumber(req.getCode(), appId, appSecret);
         UserDO user = userService.getByPhone(phone);
         if (user == null) {
-            user = this.register(phone);
+            user = this.register(phone, loginOptions.get(DEFAULT_DEPT_ID_OPTION));
         }
         return super.authenticate(user, client, request, response);
     }
@@ -82,16 +82,13 @@ public class MiniProgramLoginHandler extends AbstractLoginHandler<MiniProgramLog
         return AuthTypeEnum.MINI_PROGRAM;
     }
 
-    private UserDO register(String phone) {
-        DeptDO rootDept = deptService.getOne(new LambdaQueryWrapper<DeptDO>()
-            .eq(DeptDO::getIsSystem, true)
-            .eq(DeptDO::getParentId, 0));
-        ValidationUtils.throwIfNull(rootDept, "未查询到系统内置根部门");
-        DeptDO externalDept = deptService.getOne(new LambdaQueryWrapper<DeptDO>()
-            .eq(DeptDO::getParentId, rootDept.getId())
-            .eq(DeptDO::getName, EXTERNAL_DEPT_NAME));
-        ValidationUtils.throwIf(externalDept == null
-            || externalDept.getStatus() != DisEnableStatusEnum.ENABLE, "未查询到启用的外部部门");
+    private UserDO register(String phone, String defaultDeptIdText) {
+        ValidationUtils.throwIfBlank(defaultDeptIdText, "未配置小程序默认归属部门");
+        ValidationUtils.throwIf(!NumberUtil.isLong(defaultDeptIdText), "小程序默认归属部门配置无效");
+        Long defaultDeptId = NumberUtil.parseLong(defaultDeptIdText);
+        DeptDO defaultDept = deptService.getById(defaultDeptId);
+        ValidationUtils.throwIf(defaultDept == null
+            || defaultDept.getStatus() != DisEnableStatusEnum.ENABLE, "未查询到启用的小程序默认归属部门");
         Long roleId = roleService.getIdByCode(RoleCodeEnum.MINI_PROGRAM_USER.getCode());
         ValidationUtils.throwIfNull(roleId, "未查询到小程序用户角色");
 
@@ -99,7 +96,7 @@ public class MiniProgramLoginHandler extends AbstractLoginHandler<MiniProgramLog
         user.setUsername("mp" + IdUtil.fastSimpleUUID());
         user.setNickname("小程序用户" + RandomUtil.randomString(RandomUtil.BASE_CHAR, 5));
         user.setPhone(phone);
-        user.setDeptId(externalDept.getId());
+        user.setDeptId(defaultDept.getId());
         user.setStatus(DisEnableStatusEnum.ENABLE);
         userService.save(user);
         userRoleService.assignRolesToUser(List.of(roleId), user.getId());

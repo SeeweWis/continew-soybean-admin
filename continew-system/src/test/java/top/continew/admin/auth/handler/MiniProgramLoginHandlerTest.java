@@ -87,19 +87,17 @@ class MiniProgramLoginHandlerTest {
     }
 
     @Test
-    void shouldCreateEnabledUserUnderExternalDepartmentWithMiniProgramRole() {
+    void shouldCreateEnabledUserUnderConfiguredMiniProgramDepartment() {
         when(optionService.getByCategory(OptionCategoryEnum.LOGIN))
-            .thenReturn(
-                Map.of("MINI_PROGRAM_APP_ID", "wx-app", "MINI_PROGRAM_APP_SECRET", "secret"));
+            .thenReturn(Map.of("MINI_PROGRAM_APP_ID", "wx-app", "MINI_PROGRAM_APP_SECRET", "secret",
+                "MINI_PROGRAM_DEFAULT_DEPT_ID", "10"));
         when(miniProgramApiClient.getPhoneNumber("one-time-code", "wx-app", "secret"))
             .thenReturn("13800138000");
         when(userService.getByPhone("13800138000")).thenReturn(null);
-        DeptDO rootDept = new DeptDO();
-        rootDept.setId(1L);
-        DeptDO externalDept = new DeptDO();
-        externalDept.setId(2L);
-        externalDept.setStatus(DisEnableStatusEnum.ENABLE);
-        when(deptService.getOne(any())).thenReturn(rootDept, externalDept);
+        DeptDO miniProgramDept = new DeptDO();
+        miniProgramDept.setId(10L);
+        miniProgramDept.setStatus(DisEnableStatusEnum.ENABLE);
+        when(deptService.getById(10L)).thenReturn(miniProgramDept);
         when(roleService.getIdByCode(RoleCodeEnum.MINI_PROGRAM_USER.getCode())).thenReturn(3L);
         when(userService.save(any(UserDO.class))).thenAnswer(invocation -> {
             UserDO user = invocation.getArgument(0);
@@ -117,7 +115,7 @@ class MiniProgramLoginHandlerTest {
 
         assertEquals(expected, actual);
         verify(userService).save(org.mockito.ArgumentMatchers
-            .argThat(user -> "13800138000".equals(user.getPhone()) && user.getDeptId().equals(2L)
+            .argThat(user -> "13800138000".equals(user.getPhone()) && user.getDeptId().equals(10L)
                 && user.getStatus() == DisEnableStatusEnum.ENABLE));
         verify(userRoleService).assignRolesToUser(List.of(3L), 4L);
     }

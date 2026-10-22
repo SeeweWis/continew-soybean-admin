@@ -70,6 +70,9 @@ description: 网站、密码、邮件、登录和三方能力参数的运行时�
 | 键 | 默认值 | 说明 |
 |:---|:-------|:-----|
 | `LOGIN_CAPTCHA_ENABLED` | 1 | 是否启用登录验证码 |
+| `MINI_PROGRAM_APP_ID` | - | 微信小程序 AppID，用于手机号授权登录 |
+| `MINI_PROGRAM_APP_SECRET` | - | 微信小程序 AppSecret，接口不回显，留空保存不修改 |
+| `MINI_PROGRAM_DEFAULT_DEPT_ID` | - | 小程序自动注册用户的默认归属部门（`sys_dept.id`，种子数据指向「外部部门 → 小程序」） |
 
 ### 三方能力配置（THIRD_PARTY）
 
