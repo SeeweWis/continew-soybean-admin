@@ -45,7 +45,7 @@ Refresh Token 的密钥来自独立环境变量 `REFRESH_TOKEN_SECRET`，配置�
 | `MiniProgramLoginHandler` | `MINI_PROGRAM` | 微信小程序手机号授权 |
 | `SocialLoginHandler` | `SOCIAL` | JustAuth 第三方（Gitee、GitHub、微信开放平台） |
 
-小程序端将 `wx.getPhoneNumber` 返回的一次性 `code` 与 `clientId`、`authType: "MINI_PROGRAM"` 提交到 `POST /auth/login`。后端使用「系统配置 → 登录配置」中的 AppID 和 AppSecret 获取 access token，再调用[微信手机号接口](https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/user-info/phone-number/getPhoneNumber.html)换取手机号；access token 在进程内按 AppID 和密钥复用并在过期前刷新。首次登录会创建启用账号，归属「外部部门 → 小程序」子部门，分配“小程序用户”角色（仅本人数据权限，默认无管理端菜单权限）。默认部门由「登录配置」的 `MINI_PROGRAM_DEFAULT_DEPT_ID` 指定，种子数据默认指向该子部门，不再按部门名称查找。客户端配置需允许 `MINI_PROGRAM`。
+小程序端将 `wx.getPhoneNumber` 返回的一次性 `code` 与 `clientId`、`authType: "MINI_PROGRAM"` 提交到 `POST /auth/login`。后端使用「系统配置 → 登录配置」中的 AppID 和 AppSecret 获取 access token，再调用[微信手机号接口](https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/user-info/phone-number/getPhoneNumber.html)换取手机号；access token 在进程内按 AppID 和密钥复用并在过期前刷新。首次登录会创建启用账号，用户名格式为 `wx_` + 两个随机小写字母 + 手机号后四位，昵称为 `微信用户_` + 手机号后四位；若生成的用户名已存在，会重新生成。用户归属「外部部门 → 小程序」子部门，分配“小程序用户”角色（仅本人数据权限，默认无管理端菜单权限）。默认部门由「登录配置」的 `MINI_PROGRAM_DEFAULT_DEPT_ID` 指定，种子数据默认指向该子部门，不再按部门名称查找。客户端配置需允许 `MINI_PROGRAM`。
 
 `AuthController.login` 接收统一的 `LoginReq`，`AuthService` 按 `authType` 交给 `LoginHandlerFactory` 路由到对应处理器。每个处理器走 `preLogin`（参数校验、验证码）→ `login`（认证）→ `postLogin` 三段，`AbstractLoginHandler.authenticate` 把签发令牌的环节统一收口到 `AuthTokenService.issue`，任何登录方式都不会漏发 Refresh Token。
 

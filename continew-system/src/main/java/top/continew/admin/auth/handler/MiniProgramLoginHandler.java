@@ -16,7 +16,6 @@
 
 package top.continew.admin.auth.handler;
 
-import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
@@ -41,6 +40,7 @@ import top.continew.starter.core.util.validation.ValidationUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -92,14 +92,29 @@ public class MiniProgramLoginHandler extends AbstractLoginHandler<MiniProgramLog
         Long roleId = roleService.getIdByCode(RoleCodeEnum.MINI_PROGRAM_USER.getCode());
         ValidationUtils.throwIfNull(roleId, "未查询到小程序用户角色");
 
+        ValidationUtils.throwIf(StrUtil.isBlank(phone) || phone.length() < 4,
+            "微信小程序未返回有效手机号");
+        String phoneSuffix = phone.substring(phone.length() - 4);
         UserDO user = new UserDO();
-        user.setUsername("mp" + IdUtil.fastSimpleUUID());
-        user.setNickname("小程序用户" + RandomUtil.randomString(RandomUtil.BASE_CHAR, 5));
+        user.setUsername(this.generateUsername(phoneSuffix));
+        user.setNickname("微信用户_" + phoneSuffix);
         user.setPhone(phone);
         user.setDeptId(defaultDept.getId());
         user.setStatus(DisEnableStatusEnum.ENABLE);
         userService.save(user);
         userRoleService.assignRolesToUser(List.of(roleId), user.getId());
         return user;
+    }
+
+    private String generateUsername(String phoneSuffix) {
+        // ponytail: Limit username probes to 100; raise it if a phone suffix namespace gets crowded.
+        for (int attempt = 0; attempt < 100; attempt++) {
+            String username = "wx_" + RandomUtil.randomString(RandomUtil.BASE_CHAR, 2)
+                .toLowerCase(Locale.ROOT) + phoneSuffix;
+            if (userService.getByUsername(username) == null) {
+                return username;
+            }
+        }
+        throw new IllegalStateException("小程序用户账号生成失败，请稍后重试");
     }
 }

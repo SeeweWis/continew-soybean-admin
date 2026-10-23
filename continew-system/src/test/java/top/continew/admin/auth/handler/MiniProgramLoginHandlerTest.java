@@ -17,7 +17,11 @@
 package top.continew.admin.auth.handler;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,6 +29,7 @@ import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 import top.continew.admin.auth.client.MiniProgramApiClient;
 import top.continew.admin.auth.model.req.MiniProgramLoginReq;
@@ -94,6 +99,15 @@ class MiniProgramLoginHandlerTest {
         when(miniProgramApiClient.getPhoneNumber("one-time-code", "wx-app", "secret"))
             .thenReturn("13800138000");
         when(userService.getByPhone("13800138000")).thenReturn(null);
+        String[] takenUsername = {null};
+        when(userService.getByUsername(anyString())).thenAnswer(invocation -> {
+            String username = invocation.getArgument(0);
+            if (takenUsername[0] == null) {
+                takenUsername[0] = username;
+                return new UserDO();
+            }
+            return takenUsername[0].equals(username) ? new UserDO() : null;
+        });
         DeptDO miniProgramDept = new DeptDO();
         miniProgramDept.setId(10L);
         miniProgramDept.setStatus(DisEnableStatusEnum.ENABLE);
@@ -114,9 +128,15 @@ class MiniProgramLoginHandlerTest {
             mock(HttpServletResponse.class));
 
         assertEquals(expected, actual);
-        verify(userService).save(org.mockito.ArgumentMatchers
-            .argThat(user -> "13800138000".equals(user.getPhone()) && user.getDeptId().equals(10L)
-                && user.getStatus() == DisEnableStatusEnum.ENABLE));
+        ArgumentCaptor<UserDO> savedUser = ArgumentCaptor.forClass(UserDO.class);
+        verify(userService).save(savedUser.capture());
+        assertEquals("13800138000", savedUser.getValue().getPhone());
+        assertEquals("微信用户_8000", savedUser.getValue().getNickname());
+        assertTrue(savedUser.getValue().getUsername().matches("wx_[a-z]{2}8000"));
+        assertNotEquals(takenUsername[0], savedUser.getValue().getUsername());
+        verify(userService, atLeast(2)).getByUsername(anyString());
+        assertEquals(10L, savedUser.getValue().getDeptId());
+        assertEquals(DisEnableStatusEnum.ENABLE, savedUser.getValue().getStatus());
         verify(userRoleService).assignRolesToUser(List.of(3L), 4L);
     }
 }
