@@ -16,11 +16,14 @@
 
 package top.continew.admin.auth.adapter;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import top.continew.admin.auth.model.resp.LoginResp;
 import top.continew.admin.auth.service.AuthTokenService;
+import top.continew.admin.auth.service.SessionActivityService;
 import top.continew.admin.common.enums.DisEnableStatusEnum;
 import top.continew.admin.system.model.entity.user.UserDO;
 import top.continew.admin.system.model.resp.ClientResp;
@@ -40,6 +43,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * @author luoqiz
  * @since 4.2.0
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RefreshAccessTokenIssuerImpl implements RefreshAccessTokenIssuer {
@@ -47,6 +51,7 @@ public class RefreshAccessTokenIssuerImpl implements RefreshAccessTokenIssuer {
     private final AuthTokenService authTokenService;
     private final ClientService clientService;
     private final UserService userService;
+    private final SessionActivityService sessionActivityService;
 
     @Override
     public IssuedAccessToken issue(RefreshSession session, HttpServletRequest request,
@@ -55,6 +60,7 @@ public class RefreshAccessTokenIssuerImpl implements RefreshAccessTokenIssuer {
         if (client == null || DisEnableStatusEnum.DISABLE.equals(client.getStatus())) {
             throw RefreshTokenException.unauthorized("登录状态已失效，请重新登录");
         }
+        this.checkIdleTimeout(session, client);
         UserDO user = userService.getById(session.getUserId());
         if (user == null || StrUtil.isBlank(user.getUsername())) {
             throw RefreshTokenException.unauthorized("登录状态已失效，请重新登录");
@@ -63,5 +69,27 @@ public class RefreshAccessTokenIssuerImpl implements RefreshAccessTokenIssuer {
             request, response);
         return new IssuedAccessToken(loginResp.getAccessToken(), loginResp.getExpiresIn(),
             null);
+    }
+
+    /**
+     * 检查会话是否已闲置超时，命中抛 401，由刷新流程撤销整个会话（拦截器只拒绝当次请求）。
+     *
+     * @param session 登录会话
+     * @param client  客户端
+     */
+    private void checkIdleTimeout(RefreshSession session, ClientResp client) {
+        long idleTimeoutSeconds = ObjectUtil.defaultIfNull(client.getRefreshTokenIdleTimeout(), 0L);
+        if (idleTimeoutSeconds <= 0) {
+            return;
+        }
+        Long lastActive = sessionActivityService.getLastActiveTime(session.getSessionId());
+        // 没有活跃记录按创建时间兜底：轮换已改写 lastRefreshAt，用它会让闲置判定永远不成立。
+        long baseTime = lastActive == null ? session.getCreatedAt() : lastActive;
+        long idleMillis = System.currentTimeMillis() - baseTime;
+        if (idleMillis > idleTimeoutSeconds * 1000) {
+            log.info("会话闲置超时，撤销登录：sessionId={}，userId={}，闲置时长={}秒，闲置阈值={}秒",
+                session.getSessionId(), session.getUserId(), idleMillis / 1000, idleTimeoutSeconds);
+            throw RefreshTokenException.unauthorized("长时间未操作，请重新登录");
+        }
     }
 }

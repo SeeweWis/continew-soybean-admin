@@ -6,7 +6,7 @@ application:
   # 描述
   description: 持续迭代优化的前后端分离中后台管理系统框架，开箱即用，持续提供舒适的开发体验。
   # 版本
-  version: 4.2.0
+  version: 5.0.0-SNAPSHOT
   # 基本包
   base-package: top.continew.admin
   ## 作者信息配置
@@ -338,11 +338,17 @@ continew-starter.refresh-token:
 
 --- ### 认证配置
 auth:
+  ## 在线用户配置
+  online:
+    # 最后活跃时间落在该窗口内才展示为「在线」，只影响展示与筛选，不参与失效判断
+    presence-window: 5m
   ## 密码配置
   password:
+    # 密码过期后仍放行的路径（用于让过期用户能自助修改密码）
     excludes:
       - /auth/user/route
       - /auth/user/info
       - /auth/logout
-      - /system/user/password
+      # 必须与 UserProfileController#updatePassword 一致，写错会导致过期用户无法自助改密
+      - /user/profile/password
 

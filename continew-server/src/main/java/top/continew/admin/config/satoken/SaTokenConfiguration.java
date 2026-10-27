@@ -36,15 +36,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationUtils;
+import top.continew.admin.auth.service.SessionActivityService;
+import top.continew.admin.auth.support.ClientPolicyCache;
 import top.continew.admin.common.config.crud.CrudApiPermissionPrefixCache;
 import top.continew.admin.common.context.UserContext;
 import top.continew.admin.common.context.UserContextHolder;
+import top.continew.admin.common.exception.PasswordExpiredException;
 import top.continew.admin.open.sign.OpenApiSignTemplate;
 import top.continew.starter.auth.refresh.token.api.AccessSessionValidator;
 import top.continew.starter.auth.satoken.autoconfigure.SaTokenExtensionProperties;
 import top.continew.starter.core.constant.StringConstants;
 import top.continew.starter.core.exception.BusinessException;
-import top.continew.starter.core.util.validation.CheckUtils;
 import top.continew.starter.extension.crud.annotation.CrudRequestMapping;
 
 import java.util.Arrays;
@@ -71,6 +73,8 @@ public class SaTokenConfiguration {
     private final OpenApiSignTemplate signTemplate;
     private final ApplicationContext applicationContext;
     private final AccessSessionValidator accessSessionValidator;
+    private final SessionActivityService sessionActivityService;
+    private final ClientPolicyCache clientPolicyCache;
 
     /**
      * Sa-Token 权限认证配置
@@ -106,8 +110,25 @@ public class SaTokenConfiguration {
                     return;
                 }
                 UserContext userContext = UserContextHolder.getContext();
-                CheckUtils.throwIf(userContext.isPasswordExpired(), "密码已过期，请修改密码");
-            }), accessSessionValidator);
+                if (userContext.isPasswordExpired()) {
+                    rejectExpiredPassword();
+                }
+            }), accessSessionValidator, sessionActivityService, clientPolicyCache,
+            loginPasswordProperties);
+    }
+
+    /**
+     * 密码过期时清理线程本地上下文并中断当前请求。
+     *
+     * <p>{@code preHandle} 抛出异常时 Spring 不会回调该拦截器的 {@code afterCompletion}
+     * （只对已通过 preHandle 的拦截器回调），若不在此清除，上一请求写入的上下文会残留在 Tomcat
+     * 池化线程上被下一请求复用，造成跨用户上下文串用。</p>
+     *
+     * @throws PasswordExpiredException 始终抛出，用于中断请求并让前端跳转改密页
+     */
+    static void rejectExpiredPassword() {
+        UserContextHolder.clearContext();
+        throw new PasswordExpiredException();
     }
 
     /**
