@@ -42,9 +42,9 @@ Maven 多模块工程，根 `pom.xml` 用 `flatten-maven-plugin` 统一 `${revis
 - **CRUD 套件**：封装于 ContiNew Starter 的 `continew-starter-crud`。`BaseController<S, L, D, Q, C>` + `@CrudRequestMapping(value, api = {...})` 声明即可自动生成 CRUD 接口，`BaseController.preHandle` 根据 API 类型自动生成并校验权限码（如 `POST /system/user` → `system:user:create`）。
 - **数据填充**：`xxx/container/` 目录配置 Crane4j 容器，基于注解完成数据映射，减少单字段联表查询。
 - **认证与权限**：Sa-Token + JWT（Token 名 `Authorization`，jwt-simple 模式）；前端传入密码经 RSA 公钥加密，后端 `SecureUtils.decryptPasswordByRsaPrivateKey` 解密；数据权限由 `DataPermissionMapper` 提供。内置用户和角色不允许变更。
-- **缓存**：JetCache 二级缓存（Caffeine + Redisson），`broadcastChannel` 开启多 JVM 本地缓存失效广播。
+- **缓存**：ContiNew Starter 多级缓存（Caffeine L1 + Redis L2），注解走 Spring Cache（`@Cacheable` 等），命令式走 `CacheUtils`；`continew-starter.cache.multi.broadcast-enabled` 开启多 JVM 的 L1 失效广播（`evict`/`clear` 生效，`put` 不广播）。
 - **ID 生成**：CosID 雪花算法（`COSID`）。
-- **全局响应**：Graceful Response 统一封装，响应类 `top.continew.starter.web.model.R`。
+- **全局响应**：Starter 全局响应统一封装（`GlobalResponseBodyAdvice`），响应类 `top.continew.starter.web.model.R`。
 - **任务调度**：`continew-plugin-schedule` 通过 OpenAPI 对接 Snail Job 服务端，`snail-job.enabled: false` 默认关闭。
 
 ### 分层目录约定

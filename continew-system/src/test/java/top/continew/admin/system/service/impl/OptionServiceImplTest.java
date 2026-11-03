@@ -36,6 +36,7 @@ import top.continew.admin.system.model.query.OptionQuery;
 import top.continew.admin.system.model.req.OptionReq;
 import top.continew.admin.system.model.req.OptionValueResetReq;
 import top.continew.admin.test.TestApplicationContext;
+import top.continew.starter.cache.multicache.util.CacheUtils;
 import top.continew.starter.core.exception.BadRequestException;
 import top.continew.starter.core.exception.BusinessException;
 
@@ -89,7 +90,10 @@ class OptionServiceImplTest {
         wechatApiV3KeyReq.setId(4L);
         wechatApiV3KeyReq.setCode("WECHAT_PAY_API_V3_KEY");
         wechatApiV3KeyReq.setValue(null);
-        service.update(List.of(miniProgramReq, aliyunReq, wechatPrivateKeyReq, wechatApiV3KeyReq));
+        try (var cache = mockStatic(CacheUtils.class)) {
+            service
+                .update(List.of(miniProgramReq, aliyunReq, wechatPrivateKeyReq, wechatApiV3KeyReq));
+        }
 
         ArgumentCaptor<List<OptionDO>> captor = ArgumentCaptor.forClass(List.class);
         verify(mapper).updateById(captor.capture());

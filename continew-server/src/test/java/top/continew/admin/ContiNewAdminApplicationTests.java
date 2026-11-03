@@ -16,13 +16,37 @@
 
 package top.continew.admin;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-class ContiNewAdminApplicationTests {
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import top.continew.admin.it.BaseIntegrationTest;
+import top.continew.admin.system.service.UserService;
+
+/**
+ * 上下文加载测试
+ *
+ * <p>
+ * 验证 Spring Boot 4 + 多级缓存 + Redisson + Sa-Token + CosID + Crane4j 全链路装配，
+ * 以及 Liquibase 数据库结构初始化；依赖真实 MySQL/Redis 容器，无 Docker 环境自动跳过。
+ * </p>
+ *
+ * @author Charles7c
+ * @since 5.0.0
+ */
+class ContiNewAdminApplicationTests extends BaseIntegrationTest {
+
+    @Autowired
+    private CacheManager cacheManager;
+
+    @Autowired
+    private UserService userService;
 
     @Test
     void contextLoads() {
+        // 多级缓存管理器与核心业务 Service 装配成功，即代表全链路上下文可用
+        assertThat(cacheManager).as("多级缓存管理器应完成装配").isNotNull();
+        assertThat(userService).as("核心业务 Service 应完成装配").isNotNull();
     }
 }

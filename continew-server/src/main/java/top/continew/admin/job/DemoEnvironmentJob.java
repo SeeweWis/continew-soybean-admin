@@ -58,8 +58,7 @@ import top.continew.admin.system.model.entity.RoleMenuDO;
 import top.continew.admin.system.model.entity.StorageDO;
 import top.continew.admin.system.model.entity.UserRoleDO;
 import top.continew.admin.system.model.entity.user.UserDO;
-import top.continew.starter.cache.redisson.util.RedisUtils;
-import top.continew.starter.core.constant.StringConstants;
+import top.continew.starter.cache.multicache.util.CacheUtils;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -204,14 +203,14 @@ public class DemoEnvironmentJob {
      *
      * @param count    待清理数据项数量
      * @param resource 资源名称
-     * @param cacheKey 缓存键
+     * @param cacheName 待清空的缓存名称（cacheName）
      * @param supplier 清理数据项函数
      */
-    private void clean(Long count, String resource, String cacheKey, BooleanSupplier supplier) {
+    private void clean(Long count, String resource, String cacheName, BooleanSupplier supplier) {
         if (count > 0 && supplier.getAsBoolean()) {
             SnailJobLog.REMOTE.info("[{}] 数据项清理完成。", resource);
-            if (StrUtil.isNotBlank(cacheKey)) {
-                RedisUtils.deleteByPattern(cacheKey + StringConstants.ASTERISK);
+            if (StrUtil.isNotBlank(cacheName)) {
+                CacheUtils.evictAll(cacheName);
                 SnailJobLog.REMOTE.info("[{}] 数据项缓存清理完成。", resource);
             }
         }
