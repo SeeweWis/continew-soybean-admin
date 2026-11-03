@@ -3,12 +3,12 @@ databaseChangeLog:
       file: db/changelog/mysql/main_table.sql
   - include:
       file: db/changelog/mysql/main_data.sql
-  - include:
-      file: db/changelog/mysql/plugin/plugin_open.sql
-  - include:
-      file: db/changelog/mysql/plugin/plugin_schedule.sql
-  - include:
-      file: db/changelog/mysql/plugin/plugin_generator.sql
+#  - include:
+#      file: db/changelog/mysql/plugin/plugin_open.sql
+#  - include:
+#      file: db/changelog/mysql/plugin/plugin_schedule.sql
+#  - include:
+#      file: db/changelog/mysql/plugin/plugin_generator.sql
   - include:
       file: db/changelog/mysql/plugin/plugin_approval.sql
 # PostgreSQL
