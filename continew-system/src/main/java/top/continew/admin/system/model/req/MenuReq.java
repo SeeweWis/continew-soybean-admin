@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 import top.continew.admin.common.enums.DisEnableStatusEnum;
+import top.continew.admin.system.enums.MenuClientTypeEnum;
 import top.continew.admin.system.enums.MenuTypeEnum;
 
 import jakarta.validation.constraints.Min;
@@ -47,6 +48,12 @@ public class MenuReq implements Serializable {
     @Schema(description = "类型", example = "2")
     @NotNull(message = "类型无效")
     private MenuTypeEnum type;
+
+    /**
+     * 终端类型（按钮类型自动继承上级菜单，可不传）
+     */
+    @Schema(description = "终端类型（按钮类型自动继承上级菜单，可不传）", example = "PC")
+    private MenuClientTypeEnum clientType;
 
     /**
      * 图标

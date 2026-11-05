@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import top.continew.admin.common.enums.DisEnableStatusEnum;
+import top.continew.admin.system.enums.MenuClientTypeEnum;
 import top.continew.starter.data.annotation.Query;
 import top.continew.starter.data.enums.QueryType;
 
@@ -54,6 +55,13 @@ public class MenuQuery implements Serializable {
     @Schema(description = "状态", example = "1")
     @Query(type = QueryType.EQ)
     private DisEnableStatusEnum status;
+
+    /**
+     * 终端类型
+     */
+    @Schema(description = "终端类型", example = "PC")
+    @Query(type = QueryType.EQ)
+    private MenuClientTypeEnum clientType;
 
     public MenuQuery(DisEnableStatusEnum status) {
         this.status = status;

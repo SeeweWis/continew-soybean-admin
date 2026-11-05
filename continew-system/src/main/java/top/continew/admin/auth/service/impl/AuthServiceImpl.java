@@ -33,6 +33,7 @@ import top.continew.admin.auth.service.AuthService;
 import top.continew.admin.common.context.RoleContext;
 import top.continew.admin.common.enums.DisEnableStatusEnum;
 import top.continew.admin.system.constant.SystemConstants;
+import top.continew.admin.system.enums.MenuClientTypeEnum;
 import top.continew.admin.system.enums.MenuTypeEnum;
 import top.continew.admin.system.model.resp.ClientResp;
 import top.continew.admin.system.model.resp.MenuResp;
@@ -95,6 +96,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public List<RouteResp> buildRouteTree(Long userId) {
+        return this.buildRouteTree(userId, null);
+    }
+
+    @Override
+    public List<RouteResp> buildRouteTree(Long userId, MenuClientTypeEnum terminalType) {
         Set<RoleContext> roleSet = roleService.listByUserId(userId);
         if (CollUtil.isEmpty(roleSet)) {
             return new ArrayList<>(0);
@@ -106,8 +112,12 @@ public class AuthServiceImpl implements AuthService {
         } else {
             roleSet.forEach(r -> menuSet.addAll(menuService.listByRoleId(r.getId())));
         }
-        List<MenuResp> menuList =
-            menuSet.stream().filter(m -> !MenuTypeEnum.BUTTON.equals(m.getType())).toList();
+        List<MenuResp> menuList = menuSet.stream()
+            .filter(m -> !MenuTypeEnum.BUTTON.equals(m.getType()))
+            .filter(m -> terminalType == null || terminalType.getValue().equals(m
+                .getClientType() == null ? MenuClientTypeEnum.PC.getValue() : m.getClientType()
+                    .getValue()))
+            .toList();
         if (CollUtil.isEmpty(menuList)) {
             return new ArrayList<>(0);
         }

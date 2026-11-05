@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS `sys_menu` (
     `title`       varchar(30)  NOT NULL                    COMMENT '标题',
     `parent_id`   bigint       NOT NULL DEFAULT 0          COMMENT '上级菜单ID',
     `type`        tinyint      UNSIGNED NOT NULL DEFAULT 1 COMMENT '类型（1：目录；2：菜单；3：按钮）',
+    `client_type` varchar(50)  NOT NULL DEFAULT 'PC'       COMMENT '终端类型（取值于字典 client_type，PC：桌面端；XCX：小程序；ANDROID：安卓）',
     `path`        varchar(255) DEFAULT NULL                COMMENT '路由地址',
     `name`        varchar(50)  DEFAULT NULL                COMMENT '组件名称',
     `component`   varchar(255) DEFAULT NULL                COMMENT '组件路径',

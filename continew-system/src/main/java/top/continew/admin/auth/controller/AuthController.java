@@ -17,12 +17,16 @@
 package top.continew.admin.auth.controller;
 
 import cn.dev33.satoken.annotation.SaIgnore;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.EnumUtil;
+import cn.hutool.core.util.StrUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import me.zhyd.oauth.request.AuthRequest;
 import me.zhyd.oauth.utils.AuthStateUtils;
 import org.springframework.beans.factory.ObjectProvider;
@@ -41,8 +45,11 @@ import top.continew.admin.auth.model.resp.UserInfoResp;
 import top.continew.admin.auth.service.AuthService;
 import top.continew.admin.common.context.UserContext;
 import top.continew.admin.common.context.UserContextHolder;
+import top.continew.admin.system.enums.MenuClientTypeEnum;
 import top.continew.admin.system.enums.SocialSourceEnum;
+import top.continew.admin.system.model.resp.ClientResp;
 import top.continew.admin.system.model.resp.user.UserDetailResp;
+import top.continew.admin.system.service.ClientService;
 import top.continew.admin.system.service.UserService;
 import top.continew.starter.auth.justauth.AuthRequestFactory;
 import top.continew.starter.core.util.validation.ValidationUtils;
@@ -64,13 +71,17 @@ import java.util.List;
 @Tag(name = "认证 API")
 @Log(module = "登录")
 @Validated
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
 public class AuthController {
 
+    private static final String CLIENT_ID_CLAIM = "clientId";
+
     private final AuthService authService;
     private final UserService userService;
+    private final ClientService clientService;
     // 第三方登录为可选能力，未启用时 Starter 不注册 AuthRequestFactory，故惰性获取
     private final ObjectProvider<AuthRequestFactory> authRequestFactoryProvider;
 
@@ -133,10 +144,54 @@ public class AuthController {
         return userInfoResp;
     }
 
+    /**
+     * 获取登录用户路由信息
+     *
+     * <p>按当前令牌所属客户端的终端类型过滤菜单：桌面端客户端只返回桌面端菜单，
+     * 小程序客户端只返回小程序菜单。</p>
+     *
+     * @return 路由树
+     */
     @Log(ignore = true)
-    @Operation(summary = "获取路由信息", description = "获取登录用户的路由信息")
+    @Operation(summary = "获取路由信息", description = "获取登录用户的路由信息（按客户端终端类型过滤菜单）")
     @GetMapping("/user/route")
     public List<RouteResp> listRoute() {
-        return authService.buildRouteTree(UserContextHolder.getUserId());
+        UserContext userContext = UserContextHolder.getContext();
+        return authService.buildRouteTree(userContext.getId(),
+            this.resolveTerminalType(userContext));
+    }
+
+    /**
+     * 解析当前登录端的终端类型
+     *
+     * <p>与 {@code SaExtensionInterceptor#resolveClientId} 同理，客户端 ID 必须优先取
+     * 令牌声明：用户上下文存在用户级 SaSession，同一账号多端并发登录时会被后一次
+     * 登录覆盖，回落读取仅作非 JWT 令牌等场景的兜底。</p>
+     *
+     * @param userContext 用户上下文
+     * @return 终端类型，无法确定时返回 {@code null}（不过滤）
+     */
+    private MenuClientTypeEnum resolveTerminalType(UserContext userContext) {
+        String clientId = null;
+        try {
+            Object claim = StpUtil.getExtra(StpUtil.getTokenValue(), CLIENT_ID_CLAIM);
+            if (claim != null && !claim.toString().isBlank()) {
+                clientId = claim.toString();
+            }
+        } catch (Exception e) {
+            // 非 JWT 令牌等场景读不到声明，回落到用户上下文
+            log.debug("读取令牌中的客户端声明失败，回落到用户上下文：{}", e.getMessage());
+        }
+        if (StrUtil.isBlank(clientId) && userContext != null) {
+            clientId = userContext.getClientId();
+        }
+        if (StrUtil.isBlank(clientId)) {
+            return null;
+        }
+        ClientResp client = clientService.getByClientId(clientId);
+        if (client == null || StrUtil.isBlank(client.getClientType())) {
+            return null;
+        }
+        return EnumUtil.fromStringQuietly(MenuClientTypeEnum.class, client.getClientType());
     }
 }

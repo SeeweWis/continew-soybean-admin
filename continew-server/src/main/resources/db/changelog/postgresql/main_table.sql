@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS "sys_menu" (
     "title"       varchar(30)  NOT NULL,
     "parent_id"   int8         NOT NULL DEFAULT 0,
     "type"        int2         NOT NULL DEFAULT 1,
+    "client_type" varchar(50)  NOT NULL DEFAULT 'PC',
     "path"        varchar(255) DEFAULT NULL,
     "name"        varchar(50)  DEFAULT NULL,
     "component"   varchar(255) DEFAULT NULL,
@@ -34,6 +35,7 @@ COMMENT ON COLUMN "sys_menu"."id"          IS 'ID';
 COMMENT ON COLUMN "sys_menu"."title"       IS '标题';
 COMMENT ON COLUMN "sys_menu"."parent_id"   IS '上级菜单ID';
 COMMENT ON COLUMN "sys_menu"."type"        IS '类型（1：目录；2：菜单；3：按钮）';
+COMMENT ON COLUMN "sys_menu"."client_type" IS '终端类型（取值于字典 client_type，PC：桌面端；XCX：小程序；ANDROID：安卓）';
 COMMENT ON COLUMN "sys_menu"."path"        IS '路由地址';
 COMMENT ON COLUMN "sys_menu"."name"        IS '组件名称';
 COMMENT ON COLUMN "sys_menu"."component"   IS '组件路径';

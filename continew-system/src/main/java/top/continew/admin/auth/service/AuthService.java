@@ -19,6 +19,7 @@ package top.continew.admin.auth.service;
 import top.continew.admin.auth.model.req.LoginReq;
 import top.continew.admin.auth.model.resp.LoginResp;
 import top.continew.admin.auth.model.resp.RouteResp;
+import top.continew.admin.system.enums.MenuClientTypeEnum;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -49,4 +50,13 @@ public interface AuthService {
      * @return 路由树
      */
     List<RouteResp> buildRouteTree(Long userId);
+
+    /**
+     * 构建路由树
+     *
+     * @param userId       用户 ID
+     * @param terminalType 终端类型（null 不过滤，返回全部）
+     * @return 路由树
+     */
+    List<RouteResp> buildRouteTree(Long userId, MenuClientTypeEnum terminalType);
 }

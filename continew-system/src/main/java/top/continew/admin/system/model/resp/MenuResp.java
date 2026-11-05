@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import top.continew.admin.common.base.model.resp.BaseResp;
 import top.continew.admin.common.enums.DisEnableStatusEnum;
+import top.continew.admin.system.enums.MenuClientTypeEnum;
 import top.continew.admin.system.enums.MenuTypeEnum;
 import top.continew.starter.extension.crud.annotation.TreeField;
 
@@ -56,6 +57,12 @@ public class MenuResp extends BaseResp {
      */
     @Schema(description = "类型", example = "2")
     private MenuTypeEnum type;
+
+    /**
+     * 终端类型
+     */
+    @Schema(description = "终端类型", example = "PC")
+    private MenuClientTypeEnum clientType;
 
     /**
      * 路由地址

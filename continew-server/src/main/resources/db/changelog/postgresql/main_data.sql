@@ -421,3 +421,100 @@ INSERT INTO "sys_option" ("id", "category", "name", "code", "value", "default_va
 SELECT 547888897925840945, 'THIRD_PARTY', '微信支付公钥', 'WECHAT_PAY_PUBLIC_KEY', NULL, NULL,
     '微信支付平台公钥 PEM 原文，用于响应及通知验签；不是商户公钥'
 WHERE NOT EXISTS (SELECT 1 FROM "sys_option" WHERE "code" = 'WECHAT_PAY_PUBLIC_KEY');
+
+-- changeset seewe-yolo:mini-program-menu dbms:postgresql
+-- comment 小程序端菜单树及移动端用户角色授权（client_type 对齐 sys_client.client_type，name 对齐 continew-admin-uni menu-config.ts）
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "redirect", "icon", "is_external",
+ "is_cache", "is_hidden", "permission", "sort", "status", "create_user", "create_time")
+SELECT 3000, '业务功能', 0, 1, 'XCX', '/miniapp', 'MiniApp', 'Layout', NULL, 'mdi:cellphone-link',
+    false, false, false, NULL, 9, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 3000 AND "deleted" = 0);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "redirect", "icon", "is_external",
+ "is_cache", "is_hidden", "permission", "sort", "status", "create_user", "create_time")
+SELECT 3010, '物资管理', 3000, 1, 'XCX', '/miniapp/material', 'MiniMaterial', 'Layout', NULL,
+    'mdi:package-variant-closed', false, false, false, NULL, 1, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 3010 AND "deleted" = 0);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "redirect", "icon", "is_external",
+ "is_cache", "is_hidden", "permission", "sort", "status", "create_user", "create_time")
+SELECT 3011, '物资领用', 3010, 2, 'XCX', '/miniapp/material/requisition', 'MiniMaterialRequisition', NULL, NULL,
+    'mdi:clipboard-list-outline', false, false, false, NULL, 1, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 3011 AND "deleted" = 0);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "redirect", "icon", "is_external",
+ "is_cache", "is_hidden", "permission", "sort", "status", "create_user", "create_time")
+SELECT 3012, '扫码入库', 3010, 2, 'XCX', '/miniapp/material/inbound', 'MiniMaterialInbound', NULL, NULL,
+    'mdi:archive-arrow-up-outline', false, false, false, NULL, 2, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 3012 AND "deleted" = 0);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "redirect", "icon", "is_external",
+ "is_cache", "is_hidden", "permission", "sort", "status", "create_user", "create_time")
+SELECT 3013, '扫码盘点', 3010, 2, 'XCX', '/miniapp/material/stocktake', 'MiniMaterialStocktake', NULL, NULL,
+    'mdi:counter', false, false, false, NULL, 3, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 3013 AND "deleted" = 0);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "redirect", "icon", "is_external",
+ "is_cache", "is_hidden", "permission", "sort", "status", "create_user", "create_time")
+SELECT 3014, '应急柜点检', 3010, 2, 'XCX', '/miniapp/material/cabinet-check', 'MiniCabinetCheck', NULL, NULL,
+    'mdi:lock-check-outline', false, false, false, NULL, 4, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 3014 AND "deleted" = 0);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "redirect", "icon", "is_external",
+ "is_cache", "is_hidden", "permission", "sort", "status", "create_user", "create_time")
+SELECT 3020, '审批中心', 3000, 2, 'XCX', '/miniapp/approval', 'MiniApproval', NULL, NULL,
+    'mdi:clipboard-check-outline', false, false, false, NULL, 2, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 3020 AND "deleted" = 0);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "redirect", "icon", "is_external",
+ "is_cache", "is_hidden", "permission", "sort", "status", "create_user", "create_time")
+SELECT 3030, '培训签到', 3000, 2, 'XCX', '/miniapp/training', 'MiniTraining', NULL, NULL,
+    'mdi:map-marker-check-outline', false, false, false, NULL, 3, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 3030 AND "deleted" = 0);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "redirect", "icon", "is_external",
+ "is_cache", "is_hidden", "permission", "sort", "status", "create_user", "create_time")
+SELECT 3040, '应急事件', 3000, 2, 'XCX', '/miniapp/emergency/event', 'MiniEmergencyEvent', NULL, NULL,
+    'mdi:alert-octagon-outline', false, false, false, NULL, 4, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 3040 AND "deleted" = 0);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "redirect", "icon", "is_external",
+ "is_cache", "is_hidden", "permission", "sort", "status", "create_user", "create_time")
+SELECT 3041, '应急点位', 3000, 2, 'XCX', '/miniapp/emergency/points', 'MiniEmergencyPoints', NULL, NULL,
+    'mdi:map-marker-radius-outline', false, false, false, NULL, 5, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 3041 AND "deleted" = 0);
+
+-- 小程序角色绑定移动端菜单树
+INSERT INTO "sys_role_menu" ("role_id", "menu_id")
+SELECT r."id", m."id"
+FROM "sys_role" r
+JOIN "sys_menu" m ON m."id" BETWEEN 3000 AND 3041 AND m."deleted" = 0
+WHERE r."code" = 'mini_program_user' AND r."deleted" = 0
+  AND NOT EXISTS (
+      SELECT 1 FROM "sys_role_menu" rm WHERE rm."role_id" = r."id" AND rm."menu_id" = m."id"
+  );
+
+-- 小程序角色绑定通用能力权限（文件上传、公告阅读、部门树，节点仍归属桌面端菜单树）
+INSERT INTO "sys_role_menu" ("role_id", "menu_id")
+SELECT r."id", m."id"
+FROM "sys_role" r
+JOIN "sys_menu" m ON m."permission" IN
+    ('system:file:upload', 'system:notice:list', 'system:notice:get', 'system:dept:list')
+    AND m."deleted" = 0
+WHERE r."code" = 'mini_program_user' AND r."deleted" = 0
+  AND NOT EXISTS (
+      SELECT 1 FROM "sys_role_menu" rm WHERE rm."role_id" = r."id" AND rm."menu_id" = m."id"
+  );
+
+-- rollback DELETE FROM "sys_role_menu" WHERE "menu_id" BETWEEN 3000 AND 3041;
+-- rollback DELETE FROM "sys_menu" WHERE "id" BETWEEN 3000 AND 3041;

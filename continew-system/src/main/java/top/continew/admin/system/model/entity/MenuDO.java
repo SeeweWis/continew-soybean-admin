@@ -20,6 +20,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import top.continew.admin.common.base.model.entity.BaseDO;
 import top.continew.admin.common.enums.DisEnableStatusEnum;
+import top.continew.admin.system.enums.MenuClientTypeEnum;
 import top.continew.admin.system.enums.MenuTypeEnum;
 
 import java.io.Serial;
@@ -51,6 +52,11 @@ public class MenuDO extends BaseDO {
      * 类型
      */
     private MenuTypeEnum type;
+
+    /**
+     * 终端类型
+     */
+    private MenuClientTypeEnum clientType;
 
     /**
      * 路由地址

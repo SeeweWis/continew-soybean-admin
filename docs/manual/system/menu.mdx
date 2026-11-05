@@ -24,6 +24,7 @@ description: 目录、菜单、按钮三级资源的维护，动态路由的生�
 | `title` | 标题，同一上级下唯一（`uk_title_parent_id` 联合唯一索引） |
 | `parent_id` | 上级菜单 ID，根节点为 0 |
 | `type` | 类型（1：目录；2：菜单；3：按钮） |
+| `client_type` | 终端类型（取值于字典 client_type：PC 桌面端；XCX 小程序；ANDROID 安卓），默认 PC |
 | `path` | 路由地址；外链菜单填完整 URL（http/https 开头） |
 | `name` | 组件名称，对应前端路由 name，用于页面缓存（keep-alive）匹配 |
 | `component` | 组件路径，对应前端 `src/views` 下的 `.vue` 文件 |
@@ -45,6 +46,12 @@ description: 目录、菜单、按钮三级资源的维护，动态路由的生�
 
 前端登录后调用 `/auth/user/route` 拉取当前用户可见的菜单树，按 `component` 经 `import.meta.glob('@/views/**/*.vue')` 匹配组件并注册动态路由。`component` 填相对 `src/views` 的路径（不带前导 `/`、不带扩展名），例如 `system/user/index`。
 
+## 终端类型
+
+`client_type` 字段区分菜单归属的终端，取值与 `sys_client.client_type` 及字典 `client_type` 一致（PC、XCX、ANDROID）。菜单管理页顶部的终端 Tab 按此过滤列表；新增或修改目录、菜单时可选择终端类型，按钮类型不单独配置，保存时自动继承上级菜单。
+
+`/auth/user/route` 按当前令牌所属客户端的 `client_type` 过滤后返回：桌面端客户端登录只返回 PC 菜单，小程序客户端（`refresh_token_mode = BODY`）登录只返回 XCX 菜单。小程序工作台展示的菜单名称、图标、排序均来自此处配置。
+
 ## 权限标识与按钮鉴权
 
 按钮类型（`type = 3`）的 `permission` 字段是后端接口鉴权的依据。CRUD 类接口由 `BaseController.preHandle` 按「模块：资源：动作」自动生成权限码，例如 `POST /system/user` 要求 `system:user:create`。前端按钮用 `v-permission="['system:user:create']"` 指令控制显隐，无权限时不渲染。
@@ -61,5 +68,6 @@ description: 目录、菜单、按钮三级资源的维护，动态路由的生�
 
 - [MenuController](https://github.com/continew-org/continew-admin/blob/dev/continew-system/src/main/java/top/continew/admin/system/controller/MenuController.java)（/system/menu 接口与参数修正）
 - [MenuTypeEnum](https://github.com/continew-org/continew-admin/blob/dev/continew-system/src/main/java/top/continew/admin/system/enums/MenuTypeEnum.java)（菜单类型枚举）
+- [MenuClientTypeEnum](https://github.com/continew-org/continew-admin/blob/dev/continew-system/src/main/java/top/continew/admin/system/enums/MenuClientTypeEnum.java)（菜单终端类型枚举）
 - [MenuServiceImpl](https://github.com/continew-org/continew-admin/blob/dev/continew-system/src/main/java/top/continew/admin/system/service/impl/MenuServiceImpl.java)（菜单树与路由构建）
 - [前端页面 src/views/system/menu](https://github.com/continew-org/continew-admin-ui/tree/dev/src/views/system/menu)

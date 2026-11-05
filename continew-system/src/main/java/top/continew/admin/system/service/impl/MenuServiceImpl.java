@@ -18,6 +18,7 @@ package top.continew.admin.system.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.tree.Tree;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -28,6 +29,7 @@ import top.continew.admin.common.base.service.BaseServiceImpl;
 import top.continew.admin.common.constant.CacheConstants;
 import top.continew.admin.common.enums.DisEnableStatusEnum;
 import top.continew.admin.system.constant.SystemConstants;
+import top.continew.admin.system.enums.MenuClientTypeEnum;
 import top.continew.admin.system.enums.MenuTypeEnum;
 import top.continew.admin.system.mapper.MenuMapper;
 import top.continew.admin.system.model.entity.MenuDO;
@@ -77,6 +79,7 @@ public class MenuServiceImpl
         if (MenuTypeEnum.DIR.equals(req.getType())) {
             req.setComponent(StrUtil.blankToDefault(req.getComponent(), "Layout"));
         }
+        this.fillClientType(req, null);
         CacheUtils.evictAll(CacheConstants.ROLE_MENU_KEY_PREFIX);
         return super.create(req);
     }
@@ -90,8 +93,33 @@ public class MenuServiceImpl
         }
         MenuDO oldMenu = super.getById(id);
         CheckUtils.throwIfNotEqual(req.getType(), oldMenu.getType(), "不允许修改菜单类型");
+        this.fillClientType(req, oldMenu);
         super.update(req, id);
         CacheUtils.evictAll(CacheConstants.ROLE_MENU_KEY_PREFIX);
+    }
+
+    /**
+     * 填充终端类型
+     *
+     * <p>按钮类型不单独归属终端，始终继承上级菜单；目录和菜单未指定时沿用原值
+     * （修改场景）或默认桌面端（新增场景）。</p>
+     *
+     * @param req     请求参数
+     * @param oldMenu 原菜单实体（新增时为 {@code null}）
+     */
+    private void fillClientType(MenuReq req, MenuDO oldMenu) {
+        if (MenuTypeEnum.BUTTON.equals(req.getType())) {
+            MenuDO parent = super.getById(req.getParentId());
+            CheckUtils.throwIfNull(parent, "上级菜单不存在");
+            req.setClientType(parent.getClientType());
+            return;
+        }
+        if (req.getClientType() != null) {
+            return;
+        }
+        req.setClientType(oldMenu != null
+            ? ObjectUtil.defaultIfNull(oldMenu.getClientType(), MenuClientTypeEnum.PC)
+            : MenuClientTypeEnum.PC);
     }
 
     @Override
