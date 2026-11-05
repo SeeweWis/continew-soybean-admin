@@ -21,10 +21,10 @@ import com.aliyun.ocr_api20210707.models.RecognizeBusinessLicenseRequest;
 import com.aliyun.ocr_api20210707.models.RecognizeIdcardRequest;
 import com.aliyun.ocr_api20210707.models.RecognizeInvoiceRequest;
 import com.aliyun.teaopenapi.models.Config;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.util.StringUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import top.continew.admin.common.api.ocr.OcrApi;
 import top.continew.admin.common.api.ocr.OcrResult;
 import top.continew.admin.common.api.system.OptionApi;
@@ -165,7 +165,7 @@ public class AliyunOcrApiImpl implements OcrApi {
                 throw new BusinessException("阿里云 OCR 未返回识别数据");
             }
             return new OcrResult(requestId, data);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new BusinessException("阿里云 OCR 响应解析失败", e);
         }
     }

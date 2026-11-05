@@ -34,9 +34,9 @@ import com.aliyun.ocr_api20210707.models.RecognizeInvoiceRequest;
 import com.aliyun.ocr_api20210707.models.RecognizeInvoiceResponse;
 import com.aliyun.ocr_api20210707.models.RecognizeInvoiceResponseBody;
 import com.aliyun.teaopenapi.models.Config;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
 import top.continew.admin.common.api.ocr.OcrResult;
 import top.continew.admin.common.api.system.OptionApi;
 import top.continew.starter.core.exception.BusinessException;
@@ -69,7 +69,7 @@ class AliyunOcrApiImplTest {
         clientFactory = mock(AliyunOcrApiImpl.ClientFactory.class);
         client = mock(Client.class);
         when(clientFactory.create(any(Config.class))).thenReturn(client);
-        ocrApi = new AliyunOcrApiImpl(optionApi, new ObjectMapper(), clientFactory);
+        ocrApi = new AliyunOcrApiImpl(optionApi, new JsonMapper(), clientFactory);
     }
 
     @Test

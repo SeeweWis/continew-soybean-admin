@@ -16,9 +16,9 @@
 
 package top.continew.admin.ocr.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import tools.jackson.databind.ObjectMapper;
 import top.continew.admin.common.api.ocr.OcrApi;
 import top.continew.admin.common.api.system.OptionApi;
 import top.continew.admin.ocr.api.AliyunOcrApiImpl;
