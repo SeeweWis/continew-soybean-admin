@@ -18,6 +18,7 @@ package top.continew.admin.system.model.resp.role;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import top.continew.admin.system.enums.MenuClientTypeEnum;
 import top.continew.admin.system.enums.MenuTypeEnum;
 
 import java.io.Serial;
@@ -60,6 +61,18 @@ public class RolePermissionResp implements Serializable {
      */
     @Schema(description = "类型", example = "2")
     private MenuTypeEnum type;
+
+    /**
+     * 终端类型
+     */
+    @Schema(description = "终端类型", example = "PC")
+    private MenuClientTypeEnum clientType;
+
+    /**
+     * 图标
+     */
+    @Schema(description = "图标", example = "mdi:account-outline")
+    private String icon;
 
     /**
      * 权限标识

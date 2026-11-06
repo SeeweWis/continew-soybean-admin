@@ -518,3 +518,175 @@ WHERE r."code" = 'mini_program_user' AND r."deleted" = 0
 
 -- rollback DELETE FROM "sys_role_menu" WHERE "menu_id" BETWEEN 3000 AND 3041;
 -- rollback DELETE FROM "sys_menu" WHERE "id" BETWEEN 3000 AND 3041;
+
+-- changeset seewe-yolo:mini-program-default-menu-transition dbms:postgresql
+-- comment 撤销小程序默认角色的旧入口和桌面端上传授权，由新小程序按钮接管
+DELETE FROM "sys_role_menu"
+WHERE "role_id" IN (SELECT "id" FROM "sys_role" WHERE "code" = 'mini_program_user' AND "deleted" = 0)
+  AND ("menu_id" BETWEEN 3000 AND 3041 OR "menu_id" IN
+      (SELECT "id" FROM "sys_menu" WHERE "permission" = 'system:file:upload'
+       AND "client_type" = 'PC' AND "deleted" = 0));
+
+-- rollback INSERT INTO "sys_role_menu" ("role_id", "menu_id") SELECT r."id", m."id" FROM "sys_role" r JOIN "sys_menu" m ON (m."id" BETWEEN 3000 AND 3041 OR (m."permission" = 'system:file:upload' AND m."client_type" = 'PC')) AND m."deleted" = 0 WHERE r."code" = 'mini_program_user' AND r."deleted" = 0 AND NOT EXISTS (SELECT 1 FROM "sys_role_menu" rm WHERE rm."role_id" = r."id" AND rm."menu_id" = m."id");
+
+-- changeset seewe-yolo:mini-program-base-menu dbms:postgresql
+-- comment 小程序基础服务入口和待扩展的业务应用目录
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "icon",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841100, '基础服务', 0, 1, 'XCX', '/mini/basic', 'MiniBase', 'Layout',
+    'mdi:apps', false, false, false, 1, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841100);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "icon",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841101, '个人中心', 547888897925841100, 2, 'XCX', '/mini/basic/profile',
+    'MiniProfile', 'pages/profile/index', 'mdi:account-circle-outline',
+    false, false, false, 1, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841101);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "icon",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841102, '消息中心', 547888897925841100, 2, 'XCX', '/mini/basic/message',
+    'MiniMessage', 'pages/message/index', 'mdi:bell-outline',
+    false, false, false, 2, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841102);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "icon",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841103, '业务应用', 0, 1, 'XCX', '/mini/business', 'MiniBusiness', 'Layout',
+    'mdi:view-grid-outline', false, false, false, 2, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841103);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "permission",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841104, '附件上传', 547888897925841103, 3, 'XCX', 'system:file:upload',
+    false, false, false, 1, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841104);
+
+INSERT INTO "sys_role_menu" ("role_id", "menu_id")
+SELECT r."id", m."id"
+FROM "sys_role" r
+JOIN "sys_menu" m ON m."id" IN
+    (547888897925841100, 547888897925841101, 547888897925841102, 547888897925841103, 547888897925841104)
+    AND m."client_type" = 'XCX' AND m."deleted" = 0
+WHERE r."code" = 'mini_program_user' AND r."deleted" = 0
+  AND NOT EXISTS (
+      SELECT 1 FROM "sys_role_menu" rm WHERE rm."role_id" = r."id" AND rm."menu_id" = m."id"
+  );
+
+-- rollback DELETE FROM "sys_role_menu" WHERE "menu_id" IN (547888897925841100, 547888897925841101, 547888897925841102, 547888897925841103, 547888897925841104);
+-- rollback DELETE FROM "sys_menu" WHERE "id" IN (547888897925841104, 547888897925841101, 547888897925841102, 547888897925841103, 547888897925841100);
+
+-- changeset seewe-yolo:mini-program-approval-permissions dbms:postgresql
+-- comment 小程序审批菜单、按钮权限和基础入口权限
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "icon",
+ "is_external", "is_cache", "is_hidden", "permission", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841105, '审批中心', 547888897925841103, 1, 'XCX',
+    '/mini/business/approval', 'MiniApprovalCenter', 'Layout', 'mdi:clipboard-check-outline',
+    false, false, false, NULL, 1, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841105);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "icon",
+ "is_external", "is_cache", "is_hidden", "permission", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841106, '我的申请', 547888897925841105, 2, 'XCX',
+    '/mini/business/approval/application', 'MiniApprovalApplication', 'pages-approval/list/index',
+    'mdi:file-document-outline', false, false, false, NULL, 1, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841106);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "path", "name", "component", "icon",
+ "is_external", "is_cache", "is_hidden", "permission", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841107, '我的待办', 547888897925841105, 2, 'XCX',
+    '/mini/business/approval/task', 'MiniApprovalTask', 'pages-approval/list/index',
+    'mdi:clipboard-check-outline', false, false, false, NULL, 2, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841107);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "permission",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841108, '列表', 547888897925841106, 3, 'XCX', 'approval:instance:list',
+    false, false, false, 1, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841108);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "permission",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841109, '详情', 547888897925841106, 3, 'XCX', 'approval:instance:get',
+    false, false, false, 2, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841109);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "permission",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841110, '新建审批', 547888897925841106, 3, 'XCX', 'approval:instance:start',
+    false, false, false, 3, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841110);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "permission",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841111, '撤销', 547888897925841106, 3, 'XCX', 'approval:instance:cancel',
+    false, false, false, 4, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841111);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "permission",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841112, '列表', 547888897925841107, 3, 'XCX', 'approval:task:list',
+    false, false, false, 1, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841112);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "permission",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841113, '同意', 547888897925841107, 3, 'XCX', 'approval:task:approve',
+    false, false, false, 2, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841113);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "permission",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841114, '拒绝', 547888897925841107, 3, 'XCX', 'approval:task:reject',
+    false, false, false, 3, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841114);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "permission",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841115, '转办', 547888897925841107, 3, 'XCX', 'approval:task:transfer',
+    false, false, false, 4, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841115);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "permission",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841116, '进入', 547888897925841101, 3, 'XCX', 'mini:profile:access',
+    false, false, false, 1, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841116);
+
+INSERT INTO "sys_menu"
+("id", "title", "parent_id", "type", "client_type", "permission",
+ "is_external", "is_cache", "is_hidden", "sort", "status", "create_user", "create_time")
+SELECT 547888897925841117, '进入', 547888897925841102, 3, 'XCX', 'mini:message:access',
+    false, false, false, 1, 1, 1, NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "sys_menu" WHERE "id" = 547888897925841117);
+
+INSERT INTO "sys_role_menu" ("role_id", "menu_id")
+SELECT r."id", m."id" FROM "sys_role" r
+JOIN "sys_menu" m ON m."id" IN
+    (547888897925841105, 547888897925841106, 547888897925841107,
+     547888897925841108, 547888897925841112, 547888897925841116, 547888897925841117)
+    AND m."deleted" = 0
+WHERE r."code" = 'mini_program_user' AND r."deleted" = 0
+  AND NOT EXISTS (SELECT 1 FROM "sys_role_menu" rm
+      WHERE rm."role_id" = r."id" AND rm."menu_id" = m."id");
+
+-- rollback DELETE FROM "sys_role_menu" WHERE "menu_id" BETWEEN 547888897925841105 AND 547888897925841117;
+-- rollback DELETE FROM "sys_menu" WHERE "id" BETWEEN 547888897925841105 AND 547888897925841117;

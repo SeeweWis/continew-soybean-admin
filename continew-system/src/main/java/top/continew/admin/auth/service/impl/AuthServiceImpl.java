@@ -48,8 +48,11 @@ import top.continew.starter.extension.crud.autoconfigure.CrudProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -118,6 +121,9 @@ public class AuthServiceImpl implements AuthService {
                 .getClientType() == null ? MenuClientTypeEnum.PC.getValue() : m.getClientType()
                     .getValue()))
             .toList();
+        if (MenuClientTypeEnum.XCX.equals(terminalType)) {
+            menuList = filterVisibleMiniProgramMenus(menuSet, menuList);
+        }
         if (CollUtil.isEmpty(menuList)) {
             return new ArrayList<>(0);
         }
@@ -143,5 +149,36 @@ public class AuthServiceImpl implements AuthService {
                 tree.putExtra("permission", m.getPermission());
             });
         return BeanUtil.copyToList(treeList, RouteResp.class);
+    }
+
+    /**
+     * 小程序菜单须同时授权菜单节点和其下至少一个按钮；目录只保留可见菜单的祖先。
+     *
+     * @param granted 已授权的目录、菜单与按钮
+     * @param menuList 已授权且属于当前终端的目录与菜单
+     * @return 小程序可见的目录与菜单
+     */
+    static List<MenuResp> filterVisibleMiniProgramMenus(Set<MenuResp> granted,
+        List<MenuResp> menuList) {
+        Set<Long> buttonParents = new HashSet<>();
+        for (MenuResp menu : granted) {
+            if (MenuTypeEnum.BUTTON.equals(menu.getType())) {
+                buttonParents.add(menu.getParentId());
+            }
+        }
+        Map<Long, MenuResp> menuById = new HashMap<>();
+        menuList.forEach(menu -> menuById.put(menu.getId(), menu));
+        Set<Long> visibleIds = new HashSet<>();
+        for (MenuResp menu : menuList) {
+            if (!MenuTypeEnum.MENU.equals(menu.getType())
+                || !buttonParents.contains(menu.getId())) {
+                continue;
+            }
+            MenuResp current = menu;
+            while (current != null && visibleIds.add(current.getId())) {
+                current = menuById.get(current.getParentId());
+            }
+        }
+        return menuList.stream().filter(menu -> visibleIds.contains(menu.getId())).toList();
     }
 }
