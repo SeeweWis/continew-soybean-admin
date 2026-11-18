@@ -328,41 +328,42 @@ continew-admin
 │  │  │     └─ logback-spring.xml（日志配置文件）
 │  │  └─ test（测试相关代码目录）
 │  └─ pom.xml（包含打包相关配置）
-├─ continew-system（系统管理模块，存放系统管理相关业务功能，例如：部门管理、角色管理、用户管理等）
-│  ├─ src
-│  │  ├─ main
-│  │  │  ├─ java/top/continew/admin
-│  │  │  │  ├─ auth（系统认证相关业务）
-│  │  │  │  │  ├─ controller（系统认证相关 API）
-│  │  │  │  │  ├─ service（系统认证相关业务接口及实现类）
-│  │  │  │  │  ├─ model（系统认证相关模型）
-│  │  │  │  │  │  ├─ query（系统认证相关查询条件）
-│  │  │  │  │  │  ├─ req（系统认证相关请求参数（Request））
-│  │  │  │  │  │  └─ resp（系统认证相关响应参数（Response））
-│  │  │  │  │  ├─ enums（系统认证相关枚举）
-│  │  │  │  │  ├─ constant（系统认证相关常量）
-│  │  │  │  │  ├─ handler（系统认证相关处理器）
-│  │  │  │  │  └─ config（系统认证相关配置）
-│  │  │  │  └─ system（系统管理相关业务）
-│  │  │  │     ├─ api（系统管理相关公共业务 API 实现）
-│  │  │  │     ├─ controller（系统管理相关 API）
-│  │  │  │     ├─ service（系统管理相关业务接口及实现类）
-│  │  │  │     ├─ mapper（系统管理相关 Mapper）
-│  │  │  │     ├─ model（系统管理相关模型）
-│  │  │  │     │  ├─ entity（系统管理相关实体）
-│  │  │  │     │  ├─ query（系统管理相关查询条件）
-│  │  │  │     │  ├─ req（系统管理相关请求参数（Request））
-│  │  │  │     │  └─ resp（系统管理相关响应参数（Response））
-│  │  │  │     ├─ enums（系统管理相关枚举）
-│  │  │  │     ├─ constant（系统管理相关常量）
-│  │  │  │     ├─ util（系统管理相关工具类）
-│  │  │  │     ├─ validation（系统管理相关参数校验工具类）
-│  │  │  │     ├─ container（系统管理相关 Crane4j 数据填充容器配置）
-│  │  │  │     └─ config（系统管理相关配置）
-│  │  │  └─ resources
-│  │  │     └─ mapper（系统管理相关 Mapper XML 文件目录）
-│  │  └─ test（测试相关代码目录）
-│  └─ pom.xml
+├─ continew-module（业务模块聚合）
+│  └─ continew-system（系统管理模块，存放系统管理相关业务功能，例如：部门管理、角色管理、用户管理等）
+│     ├─ src
+│     │  ├─ main
+│     │  │  ├─ java/top/continew/admin
+│     │  │  │  ├─ auth（系统认证相关业务）
+│     │  │  │  │  ├─ controller（系统认证相关 API）
+│     │  │  │  │  ├─ service（系统认证相关业务接口及实现类）
+│     │  │  │  │  ├─ model（系统认证相关模型）
+│     │  │  │  │  │  ├─ query（系统认证相关查询条件）
+│     │  │  │  │  │  ├─ req（系统认证相关请求参数（Request））
+│     │  │  │  │  │  └─ resp（系统认证相关响应参数（Response））
+│     │  │  │  │  ├─ enums（系统认证相关枚举）
+│     │  │  │  │  ├─ constant（系统认证相关常量）
+│     │  │  │  │  ├─ handler（系统认证相关处理器）
+│     │  │  │  │  └─ config（系统认证相关配置）
+│     │  │  │  └─ system（系统管理相关业务）
+│     │  │  │     ├─ api（系统管理相关公共业务 API 实现）
+│     │  │  │     ├─ controller（系统管理相关 API）
+│     │  │  │     ├─ service（系统管理相关业务接口及实现类）
+│     │  │  │     ├─ mapper（系统管理相关 Mapper）
+│     │  │  │     ├─ model（系统管理相关模型）
+│     │  │  │     │  ├─ entity（系统管理相关实体）
+│     │  │  │     │  ├─ query（系统管理相关查询条件）
+│     │  │  │     │  ├─ req（系统管理相关请求参数（Request））
+│     │  │  │     │  └─ resp（系统管理相关响应参数（Response））
+│     │  │  │     ├─ enums（系统管理相关枚举）
+│     │  │  │     ├─ constant（系统管理相关常量）
+│     │  │  │     ├─ util（系统管理相关工具类）
+│     │  │  │     ├─ validation（系统管理相关参数校验工具类）
+│     │  │  │     ├─ container（系统管理相关 Crane4j 数据填充容器配置）
+│     │  │  │     └─ config（系统管理相关配置）
+│     │  │  └─ resources
+│     │  │     └─ mapper（系统管理相关 Mapper XML 文件目录）
+│     │  └─ test（测试相关代码目录）
+│     └─ pom.xml
 ├─ continew-plugin（插件模块，存放能力开放等扩展模块，后续会进行插件化改造）
 │  ├─ continew-plugin-open（能力开放插件模块）
 │  │  ├─ src

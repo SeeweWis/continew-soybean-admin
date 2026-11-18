@@ -27,7 +27,7 @@
 
     <modules>
         <module>continew-server</module>
-        <module>continew-system</module>
+        <module>continew-module</module>
         <module>continew-plugin</module>
         <module>continew-common</module>
         <module>continew-extension</module>
@@ -45,6 +45,14 @@
     <!-- 全局依赖版本管理 -->
     <dependencyManagement>
         <dependencies>
+            <!-- 业务模块聚合 -->
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>continew-module</artifactId>
+                <version>${revision}</version>
+                <type>pom</type>
+            </dependency>
+
             <!-- API 模块（存放 Controller 层代码，打包部署的模块） -->
             <dependency>
                 <groupId>${project.groupId}</groupId>
