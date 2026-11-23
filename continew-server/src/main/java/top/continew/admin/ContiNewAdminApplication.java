@@ -18,8 +18,6 @@ package top.continew.admin;
 
 import cn.dev33.satoken.annotation.SaIgnore;
 import cn.hutool.core.map.MapUtil;
-import cn.hutool.core.net.NetUtil;
-import cn.hutool.core.util.URLUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
@@ -30,18 +28,24 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootVersion;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.server.Ssl;
 import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 import top.continew.starter.core.ContiNewStarterVersion;
 import top.continew.starter.core.autoconfigure.application.ApplicationProperties;
 import top.continew.starter.extension.crud.annotation.EnableCrudApi;
 import top.continew.starter.web.annotation.EnableGlobalResponse;
 import top.continew.starter.web.model.R;
 import top.nextdoc4j.core.configuration.NextDoc4jProperties;
+
+import java.net.InetAddress;
+import java.net.URI;
 
 /**
  * 启动程序
@@ -63,6 +67,7 @@ public class ContiNewAdminApplication implements ApplicationRunner {
 
     private final ApplicationProperties applicationProperties;
     private final ServerProperties serverProperties;
+    private final Environment environment;
 
     public static void main(String[] args) {
         SpringApplication application = new SpringApplication(ContiNewAdminApplication.class);
@@ -80,21 +85,30 @@ public class ContiNewAdminApplication implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        String hostAddress = NetUtil.getLocalhostStr();
-        Integer port = serverProperties.getPort();
-        String contextPath = serverProperties.getServlet().getContextPath();
-        String baseUrl = URLUtil.normalize("%s:%s%s".formatted(hostAddress, port, contextPath));
+        InetAddress address = serverProperties.getAddress();
+        String host = address == null || address.isAnyLocalAddress()
+            ? "localhost" : address.getHostAddress();
+        int configuredPort = environment.getProperty("server.port", Integer.class, 8080);
+        int port = environment.getProperty("local.server.port", Integer.class, configuredPort);
+        URI baseUrl = UriComponentsBuilder.newInstance()
+            .scheme(Ssl.isEnabled(serverProperties.getSsl()) ? "https" : "http")
+            .host(host)
+            .port(port)
+            .replacePath(serverProperties.getServlet().getContextPath())
+            .path("/")
+            .build()
+            .toUri();
         log.info("--------------------------------------------------------");
-        log.info("{} server started successfully.", applicationProperties.getName());
+        log.info("{} server 启动成功～.", applicationProperties.getName());
         log.info("ContiNew Starter: v{} (Spring Boot: v{})", ContiNewStarterVersion.VERSION,
             SpringBootVersion
                 .getVersion());
-        log.info("当前版本: v{} (Profile: {})", applicationProperties.getVersion(), SpringUtil
+        log.info("当前版本: v{} (Profile: {})", applicationProperties.getVersion(), environment
             .getProperty("spring.profiles.active"));
         log.info("服务地址: {}", baseUrl);
         NextDoc4jProperties docProperties = SpringUtil.getBean(NextDoc4jProperties.class);
         if (!docProperties.isProduction()) {
-            log.info("接口文档: {}/doc.html", baseUrl);
+            log.info("接口文档: {}", baseUrl.resolve("doc.html"));
         }
         log.info("--------------------------------------------------------");
     }
