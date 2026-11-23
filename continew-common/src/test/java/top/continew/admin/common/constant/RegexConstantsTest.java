@@ -14,16 +14,29 @@
  * limitations under the License.
  */
 
-package top.continew.admin.generator.mapper;
+package top.continew.admin.common.constant;
 
-import top.continew.admin.generator.model.entity.GenConfigDO;
-import top.continew.starter.data.mapper.BaseMapper;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import cn.hutool.core.util.ReUtil;
+import org.junit.jupiter.api.Test;
 
 /**
- * 生成配置 Mapper
+ * 用户名长度边界测试
  *
- * @author Charles7c
- * @since 1.1.0
+ * @author SeeweWis
+ * @since 5.0.0
  */
-public interface GenConfigMapper extends BaseMapper<GenConfigDO> {
+class RegexConstantsTest {
+
+    @Test
+    void shouldAcceptDatabaseMaximumUsernameLength() {
+        assertTrue(ReUtil.isMatch(RegexConstants.USERNAME, "a" + "b".repeat(63)));
+    }
+
+    @Test
+    void shouldRejectUsernameLongerThanDatabaseColumn() {
+        assertFalse(ReUtil.isMatch(RegexConstants.USERNAME, "a" + "b".repeat(64)));
+    }
 }

@@ -27,7 +27,7 @@ public class RegexConstants {
     /**
      * 用户名正则（用户名长度为 4-64 个字符，支持大小写字母、数字、下划线，以字母开头）
      */
-    public static final String USERNAME = "^[a-zA-Z][a-zA-Z0-9_]{3,64}$";
+    public static final String USERNAME = "^[a-zA-Z][a-zA-Z0-9_]{3,63}$";
 
     /**
      * 密码正则模板（密码长度为 min-max 个字符，支持大小写字母、数字、特殊字符，至少包含字母和数字）

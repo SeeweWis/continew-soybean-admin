@@ -24,6 +24,7 @@ import static top.continew.admin.system.enums.PasswordPolicyEnum.PASSWORD_MIN_LE
 import static top.continew.admin.system.enums.PasswordPolicyEnum.PASSWORD_REPETITION_TIMES;
 import static top.continew.admin.system.enums.PasswordPolicyEnum.PASSWORD_REQUIRE_SYMBOLS;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.file.FileNameUtil;
@@ -63,6 +64,7 @@ import top.continew.admin.common.context.UserContextHolder;
 import top.continew.admin.common.enums.DisEnableStatusEnum;
 import top.continew.admin.common.enums.GenderEnum;
 import top.continew.admin.common.util.SecureUtils;
+import top.continew.admin.common.util.TransactionUtils;
 import top.continew.admin.system.enums.OptionCategoryEnum;
 import top.continew.admin.system.mapper.user.UserMapper;
 import top.continew.admin.system.model.entity.DeptDO;
@@ -170,6 +172,7 @@ public class UserServiceImpl
 
     @Override
     public void beforeCreate(UserReq req) {
+        this.checkAssignRolePermission(req.getRoleIds(), Collections.emptyList());
         String password =
             SecureUtils.decryptPasswordByRsaPrivateKey(req.getPassword(), "密码解密失败", true);
         req.setPassword(password);
@@ -202,19 +205,21 @@ public class UserServiceImpl
                 .getUserId()),
             "不允许禁用当前用户");
         UserDO oldUser = this.getById(id);
+        List<Long> oldRoleIds = userRoleService.listRoleIdByUserId(id);
         if (Boolean.TRUE.equals(oldUser.getIsSystem())) {
             CheckUtils.throwIfEqual(DisEnableStatusEnum.DISABLE, newStatus, "[{}] 是系统内置用户，不允许禁用",
                 oldUser
                     .getNickname());
             Collection<Long> disjunctionRoleIds =
-                CollUtil.disjunction(req.getRoleIds(), userRoleService
-                    .listRoleIdByUserId(id));
+                CollUtil.disjunction(req.getRoleIds(), oldRoleIds);
             CheckUtils.throwIfNotEmpty(disjunctionRoleIds, "[{}] 是系统内置用户，不允许变更角色",
                 oldUser.getNickname());
         }
+        this.checkAssignRolePermission(req.getRoleIds(), oldRoleIds);
         // 更新信息
         UserDO newUser = BeanUtil.toBean(req, UserDO.class);
         newUser.setId(id);
+        newUser.setPassword(null);
         baseMapper.updateById(newUser);
         // 保存用户和角色关联
         boolean isSaveUserRoleSuccess = userRoleService.assignRolesToUser(req.getRoleIds(), id);
@@ -225,7 +230,7 @@ public class UserServiceImpl
         }
         // 如果角色有变更，则更新在线用户权限信息
         if (isSaveUserRoleSuccess) {
-            this.updateContext(id);
+            TransactionUtils.afterCommit(() -> this.updateContext(id));
         }
     }
 
@@ -367,14 +372,18 @@ public class UserServiceImpl
                 "数据不符合导入策略，已退出导入");
 
         // 基础数据准备
-        Map<String, Long> userMap = existUserList.stream()
-            .collect(Collectors.toMap(UserDO::getUsername, UserDO::getId));
+        Map<String, UserDO> userMap = existUserList.stream()
+            .collect(Collectors.toMap(UserDO::getUsername, Function.identity()));
+        Set<String> systemUsernames = existUserList.stream()
+            .filter(user -> Boolean.TRUE.equals(user.getIsSystem()))
+            .map(UserDO::getUsername)
+            .collect(Collectors.toSet());
         List<RoleDO> roleList = roleService.listByNames(importUserList.stream()
             .map(UserImportRowReq::getRoleName)
             .distinct()
             .toList());
-        Map<String, Long> roleMap =
-            roleList.stream().collect(Collectors.toMap(RoleDO::getName, RoleDO::getId));
+        Map<String, RoleDO> roleMap =
+            roleList.stream().collect(Collectors.toMap(RoleDO::getName, Function.identity()));
         // 获取多级部门映射
         Map<String, Long> deptMap = buildMultiLevelDeptMapping(importUserList.stream()
             .map(UserImportRowReq::getDeptName)
@@ -393,23 +402,37 @@ public class UserServiceImpl
                 continue;
             }
             UserDO userDO = BeanUtil.toBeanIgnoreError(row, UserDO.class);
-            userDO.setStatus(req.getDefaultStatus());
-            userDO.setPwdResetTime(LocalDateTime.now(GlobalConstants.DEFAULT_ZONE_ID));
             userDO.setGender(
                 EnumUtil.getBy(GenderEnum::getDescription, row.getGender(), GenderEnum.UNKNOWN));
             userDO.setDeptId(deptMap.get(row.getDeptName()));
+            RoleDO role = roleMap.get(row.getRoleName());
+            CheckUtils.throwIfNull(role, "角色 [{}] 不存在", row.getRoleName());
+            CheckUtils.throwIf(Boolean.TRUE.equals(role.getIsSystem()),
+                "角色 [{}] 是系统内置角色，不允许通过导入分配", row.getRoleName());
             // 修改 or 新增
             if (UPDATE.validate(req.getDuplicateUser(), row.getUsername(), existUsernames)) {
-                userDO.setId(userMap.get(row.getUsername()));
+                CheckUtils.throwIf(systemUsernames.contains(row.getUsername()),
+                    "系统内置用户 [{}] 不允许导入更新", row.getUsername());
+                Long userId = userMap.get(row.getUsername()).getId();
+                userDO.setId(userId);
+                userDO.setPassword(null);
+                this.checkAssignRolePermission(List.of(role.getId()),
+                    userRoleService.listRoleIdByUserId(userId));
                 updateList.add(userDO);
             } else {
                 userDO.setId(idGenerator.generate());
                 userDO.setIsSystem(false);
+                userDO.setStatus(req.getDefaultStatus());
+                userDO.setPwdResetTime(LocalDateTime.now(GlobalConstants.DEFAULT_ZONE_ID));
                 insertList.add(userDO);
             }
-            userRoleDoList.add(new UserRoleDO(userDO.getId(), roleMap.get(row.getRoleName())));
+            userRoleDoList.add(new UserRoleDO(userDO.getId(), role.getId()));
         }
         doImportUser(insertList, updateList, userRoleDoList);
+        if (CollUtil.isNotEmpty(updateList)) {
+            TransactionUtils.afterCommit(() -> updateList.forEach(user -> this.updateContext(user
+                .getId())));
+        }
         RedisUtils.delete(CacheConstants.DATA_IMPORT_KEY + req.getImportKey());
         return new UserImportResp(insertList.size() + updateList.size(), insertList.size(),
             updateList.size());
@@ -805,7 +828,19 @@ public class UserServiceImpl
     private List<UserDO> listByUsernames(List<String> usernames) {
         return this.list(Wrappers.<UserDO>lambdaQuery()
             .in(UserDO::getUsername, usernames)
-            .select(UserDO::getId, UserDO::getUsername));
+            .select(UserDO::getId, UserDO::getUsername, UserDO::getIsSystem));
+    }
+
+    void checkAssignRolePermission(Collection<Long> newRoleIds, Collection<Long> oldRoleIds) {
+        Set<Long> newRoleIdSet = CollUtil.isEmpty(newRoleIds)
+            ? Collections.emptySet()
+            : new HashSet<>(newRoleIds);
+        Set<Long> oldRoleIdSet = CollUtil.isEmpty(oldRoleIds)
+            ? Collections.emptySet()
+            : new HashSet<>(oldRoleIds);
+        if (!newRoleIdSet.equals(oldRoleIdSet)) {
+            StpUtil.checkPermission("system:user:updateRole");
+        }
     }
 
     /**
@@ -818,7 +853,7 @@ public class UserServiceImpl
         if (userContext != null) {
             userContext.setRoles(roleService.listByUserId(id));
             userContext.setPermissions(roleService.listPermissionByUserId(id));
-            UserContextHolder.setContext(userContext);
+            UserContextHolder.updateSessionContext(userContext);
         }
     }
 

@@ -30,7 +30,6 @@
         <module>continew-module</module>
         <module>continew-plugin</module>
         <module>continew-common</module>
-        <module>continew-extension</module>
     </modules>
 
     <properties>
@@ -85,13 +84,6 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>continew-plugin-schedule</artifactId>
-                <version>${revision}</version>
-            </dependency>
-
-            <!-- 代码生成器插件（后续会改造为独立插件） -->
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>continew-plugin-generator</artifactId>
                 <version>${revision}</version>
             </dependency>
 

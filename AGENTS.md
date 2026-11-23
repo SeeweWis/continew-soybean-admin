@@ -33,8 +33,7 @@ Maven 多模块工程，根 `pom.xml` 用 `flatten-maven-plugin` 统一 `${revis
 | `continew-server` | 打包部署入口（启动类 + 通用 controller + Liquibase + 配置文件） |
 | `continew-system` | 核心业务：auth（系统认证）、system（部门/角色/用户/菜单/字典/文件/公告/系统配置等） |
 | `continew-common` | 公共基类、工具、配置（CRUD/MyBatis/Websocket/Doc/Excel/Exception） |
-| `continew-plugin` | 独立可插拔插件：open（能力开放 AK/SK）、schedule（任务调度）、generator（代码生成器） |
-| `continew-extension` | 可独立部署的扩展服务（continew-extension-schedule-server 为 Snail Job 服务端，可选） |
+| `continew-plugin` | 独立可插拔插件：open（能力开放 AK/SK）、schedule（任务调度） |
 
 ### 关键机制
 
@@ -45,7 +44,7 @@ Maven 多模块工程，根 `pom.xml` 用 `flatten-maven-plugin` 统一 `${revis
 - **缓存**：ContiNew Starter 多级缓存（Caffeine L1 + Redis L2），注解走 Spring Cache（`@Cacheable` 等），命令式走 `CacheUtils`；`continew-starter.cache.multi.broadcast-enabled` 开启多 JVM 的 L1 失效广播（`evict`/`clear` 生效，`put` 不广播）。
 - **ID 生成**：CosID 雪花算法（`COSID`）。
 - **全局响应**：Starter 全局响应统一封装（`GlobalResponseBodyAdvice`），响应类 `top.continew.starter.web.model.R`。
-- **任务调度**：`continew-plugin-schedule` 通过 OpenAPI 对接 Snail Job 服务端，`snail-job.enabled: false` 默认关闭。
+- **任务调度**：`continew-plugin-schedule` 通过 OpenAPI 对接独立部署的 Snail Job 服务端，`snail-job.enabled: false` 默认关闭。
 
 ### 分层目录约定
 

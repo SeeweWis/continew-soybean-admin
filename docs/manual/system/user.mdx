@@ -18,6 +18,8 @@ description: 系统用户的查询、新增、导入导出、重置密码与分�
 
 CRUD 接口的权限码由 `BaseController.preHandle` 按 API 类型自动生成，例如新增用户对应 `system:user:create`，删除对应 `system:user:delete`。
 
+新增用户会分配至少一个角色，因此调用方还需 `system:user:updateRole`。修改用户或执行导入时，只有角色集合发生变化才要求该权限；不变更角色时原有新增、修改或导入权限即可。
+
 ## 用户字段
 
 `sys_user` 表的主要字段如下。

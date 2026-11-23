@@ -36,12 +36,6 @@
             <artifactId>continew-plugin-schedule</artifactId>
         </dependency>
 
-        <!-- 代码生成器插件 -->
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>continew-plugin-generator</artifactId>
-        </dependency>
-
         <!-- 阿里云 OCR 插件 -->
         <dependency>
             <groupId>${project.groupId}</groupId>

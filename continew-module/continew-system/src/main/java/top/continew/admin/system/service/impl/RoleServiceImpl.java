@@ -30,6 +30,7 @@ import top.continew.admin.common.context.UserContext;
 import top.continew.admin.common.context.UserContextHolder;
 import top.continew.admin.common.enums.DataScopeEnum;
 import top.continew.admin.common.enums.RoleCodeEnum;
+import top.continew.admin.common.util.TransactionUtils;
 import top.continew.admin.system.constant.SystemConstants;
 import top.continew.admin.system.mapper.RoleMapper;
 import top.continew.admin.system.model.entity.RoleDO;
@@ -110,7 +111,7 @@ public class RoleServiceImpl
         boolean isSaveDeptSuccess = roleDeptService.add(req.getDeptIds(), id);
         // 如果数据权限有变更，则更新在线用户权限信息
         if (isSaveDeptSuccess || ObjectUtil.notEqual(req.getDataScope(), oldDataScope)) {
-            this.updateUserContext(id);
+            TransactionUtils.afterCommit(() -> this.updateUserContext(id));
         }
     }
 
@@ -157,9 +158,9 @@ public class RoleServiceImpl
             role.getName());
         // 保存角色和菜单关联
         boolean isSaveMenuSuccess = roleMenuService.add(req.getMenuIds(), id);
-        // 如果功能权限有变更，则更新在线用户权限信息
+        // 功能权限有变更时，在事务提交后同步在线用户权限
         if (isSaveMenuSuccess) {
-            this.updateUserContext(id);
+            TransactionUtils.afterCommit(() -> this.updateUserContext(id));
         }
         baseMapper.lambdaUpdate()
             .set(RoleDO::getMenuCheckStrictly, req.getMenuCheckStrictly())
@@ -186,7 +187,7 @@ public class RoleServiceImpl
             if (userContext != null) {
                 userContext.setRoles(this.listByUserId(userId));
                 userContext.setPermissions(this.listPermissionByUserId(userId));
-                UserContextHolder.setContext(userContext);
+                UserContextHolder.updateSessionContext(userContext);
             }
         });
     }

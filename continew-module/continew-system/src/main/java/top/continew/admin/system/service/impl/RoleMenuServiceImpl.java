@@ -59,6 +59,9 @@ public class RoleMenuServiceImpl extends ServiceImpl<RoleMenuMapper, RoleMenuDO>
         // 保存最新关联
         List<RoleMenuDO> roleMenuList =
             CollUtils.mapToList(menuIds, menuId -> new RoleMenuDO(roleId, menuId));
+        if (CollUtil.isEmpty(roleMenuList)) {
+            return true;
+        }
         return baseMapper.insertBatch(roleMenuList);
     }
 

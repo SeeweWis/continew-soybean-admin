@@ -16,6 +16,8 @@
 
 package top.continew.admin.common.context;
 
+import cn.dev33.satoken.exception.SaTokenContextException;
+import cn.dev33.satoken.exception.SaTokenException;
 import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.convert.Convert;
@@ -58,7 +60,20 @@ public class UserContextHolder {
     public static void setContext(UserContext context, boolean isUpdate) {
         CONTEXT_HOLDER.set(context);
         if (isUpdate) {
-            StpUtil.getSessionByLoginId(context.getId()).set(SaSession.USER, context);
+            updateSessionContext(context);
+        }
+    }
+
+    /**
+     * 更新已登录用户的会话上下文，不污染当前线程缓存
+     *
+     * @param context 用户上下文
+     * @since 5.0.0
+     */
+    public static void updateSessionContext(UserContext context) {
+        SaSession session = StpUtil.getSessionByLoginId(context.getId(), false);
+        if (session != null) {
+            session.set(SaSession.USER, context);
         }
     }
 
@@ -69,6 +84,10 @@ public class UserContextHolder {
      */
     public static UserContext getContext() {
         UserContext context = CONTEXT_HOLDER.get();
+        if (context != null && !isOwnedByCurrentLogin(context)) {
+            clearContext();
+            context = null;
+        }
         if (context == null) {
             context = StpUtil.getSession().getModel(SaSession.USER, UserContext.class);
             CONTEXT_HOLDER.set(context);
@@ -88,6 +107,19 @@ public class UserContextHolder {
             return null;
         }
         return session.getModel(SaSession.USER, UserContext.class);
+    }
+
+    private static boolean isOwnedByCurrentLogin(UserContext context) {
+        Object loginId;
+        try {
+            loginId = StpUtil.getLoginIdDefaultNull();
+        } catch (SaTokenContextException e) {
+            return true;
+        } catch (SaTokenException e) {
+            return false;
+        }
+        return loginId != null && context.getId() != null
+            && loginId.toString().equals(context.getId().toString());
     }
 
     /**

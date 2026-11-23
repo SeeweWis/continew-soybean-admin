@@ -24,14 +24,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import top.continew.admin.it.BaseIntegrationTest;
+import top.continew.admin.system.enums.MessageTypeEnum;
+import top.continew.admin.system.enums.NoticeScopeEnum;
+import top.continew.admin.system.mapper.MessageMapper;
 import top.continew.admin.system.mapper.user.UserMapper;
+import top.continew.admin.system.model.entity.MessageDO;
 import top.continew.admin.system.model.entity.user.UserDO;
 import top.continew.admin.system.model.query.DictQuery;
 import top.continew.admin.system.model.resp.DictResp;
 import top.continew.admin.system.service.DictService;
+import top.continew.admin.system.service.MessageService;
 import top.continew.admin.system.service.UserService;
 import top.continew.starter.extension.crud.model.query.PageQuery;
 import top.continew.starter.extension.crud.model.resp.BasePageResp;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 系统模块 Service 契约集成测试
@@ -63,6 +71,12 @@ class SystemServiceIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private MessageMapper messageMapper;
+
+    @Autowired
+    private MessageService messageService;
 
     private String probeUsername;
 
@@ -122,5 +136,23 @@ class SystemServiceIntegrationTest extends BaseIntegrationTest {
 
         assertThat(dbPhone).as("库中 phone 应为密文而非明文").isNotEqualTo(rawPhone);
         assertThat(ormPhone).as("ORM 读回应解密回原值").isEqualTo(rawPhone);
+    }
+
+    @Test
+    void deletingTargetedMessageShouldReadItsUserListFromDatabase() {
+        MessageDO message = new MessageDO();
+        message.setTitle("消息删除映射探针");
+        message.setContent("mapping test");
+        message.setType(MessageTypeEnum.SYSTEM);
+        message.setScope(NoticeScopeEnum.USER);
+        message.setUsers(List.of("987654321"));
+        message.setCreateTime(LocalDateTime.now());
+        messageMapper.insert(message);
+
+        messageService.delete(List.of(message.getId()), 987654321L);
+
+        assertThat(messageMapper.selectById(message.getId()))
+            .as("指定用户消息应按映射出的 users 列表删除")
+            .isNull();
     }
 }

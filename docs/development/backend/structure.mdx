@@ -15,8 +15,7 @@ ContiNew Admin 分两个仓库。后端目录 continew-soybean-admin 是 Maven �
 | `continew-module` | 业务模块聚合，`packaging=pom`，当前包含 `continew-system` |
 | `continew-module/continew-system` | 核心业务：`auth`（系统认证）+ `system`（部门、角色、用户、菜单、字典、文件、公告、系统配置等） |
 | `continew-common` | 公共基类、工具与配置：CRUD 基类（`base`）、MyBatis、接口文档、Excel、全局异常（`config` 下对应子包） |
-| `continew-plugin` | 可插拔插件：`continew-plugin-open`（能力开放 AK/SK）、`continew-plugin-schedule`（任务调度）、`continew-plugin-generator`（代码生成器） |
-| `continew-extension` | 可独立部署的扩展服务：`continew-extension-schedule-server`（Snail Job 调度中心服务端，可选部署） |
+| `continew-plugin` | 可插拔插件：`continew-plugin-open`（能力开放 AK/SK）、`continew-plugin-schedule`（任务调度客户端） |
 
 整体目录骨架如下。
 
@@ -30,7 +29,7 @@ continew-soybean-admin
 │     │  ├─ job（定时任务，如 NoticePublishJob）
 │     │  └─ ContiNewAdminApplication.java
 │     └─ resources
-│        ├─ config（application.yml、application-dev.yml、application-prod.yml、application-generator.yml）
+│        ├─ config（application.yml、application-dev.yml、application-prod.yml）
 │        ├─ db/changelog（mysql/ 与 postgresql/ 脚本、db.changelog-master.yaml）
 │        ├─ templates（邮件等模板）
 │        ├─ banner.txt
@@ -45,15 +44,12 @@ continew-soybean-admin
 ├─ continew-plugin
 │  ├─ continew-plugin-open
 │  ├─ continew-plugin-schedule
-│  └─ continew-plugin-generator（resources/templates 下放 backend/ 与 frontend/ 代码生成 .ftl 模板）
 ├─ continew-common
 │  └─ src/main/java/top/continew/admin/common
 │     ├─ api（公共业务 API 接口）
 │     ├─ base（controller/mapper/service/model 公共基类）
 │     ├─ config（crud、doc、excel、exception、mybatis）
 │     ├─ context、enums、constant、model、util
-├─ continew-extension
-│  └─ continew-extension-schedule-server（独立启动类 ScheduleServerApplication，独立 changelog 管理 sj_* 表）
 └─ docker（Dockerfile、docker-compose.yml、nginx 与 redis 配置）
 ```
 
@@ -108,7 +104,6 @@ src
 | `system` | 用户、角色、菜单、部门、字典、通知公告、文件、系统配置（config 下 site/security/login/mail/sms/storage/client 七组） |
 | `monitor` | 在线用户、登录日志、操作日志、短信日志 |
 | `schedule` | 任务管理、任务日志 |
-| `code/generator` | 代码生成 |
 | `open/app` | 应用管理（AK/SK） |
 | `user` | 个人中心（profile）、消息中心（message） |
 | `login` | 登录页、第三方回调（social）、密码过期（pwdExpired） |

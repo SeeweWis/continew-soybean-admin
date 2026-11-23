@@ -44,7 +44,7 @@ public class SecureUtils {
      * @return 加密后的内容
      */
     public static String encryptByRsaPublicKey(String data) {
-        String publicKey = RsaProperties.PUBLIC_KEY;
+        String publicKey = RsaProperties.publicKey();
         ValidationUtils.throwIfBlank(publicKey, "请配置 RSA 公钥");
         return encryptByRsaPublicKey(data, publicKey);
     }
@@ -68,7 +68,7 @@ public class SecureUtils {
      * @return 解密后的内容
      */
     public static String decryptByRsaPrivateKey(String data) {
-        String privateKey = RsaProperties.PRIVATE_KEY;
+        String privateKey = RsaProperties.privateKey();
         ValidationUtils.throwIfBlank(privateKey, "请配置 RSA 私钥");
         return decryptByRsaPrivateKey(data, privateKey);
     }
